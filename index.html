@@ -14,33 +14,38 @@
       text-align: center;
     }
     h1 { margin-bottom: 2rem; }
+
     .carousel-wrapper {
       width: 100%;
-      overflow: hidden;
+      overflow-x: auto;
       display: flex;
       justify-content: center;
     }
+
     .carousel {
       display: flex;
       gap: 1.2rem;
-      transition: transform 0.3s ease;
+      justify-content: center;
+      padding: 0 1rem;
     }
+
     .card {
       flex: 0 0 100px;
       height: 140px;
       border-radius: 16px;
-      background: white;
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      background: transparent;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
+
     .card.faded {
       opacity: 0.2;
       transform: scale(0.92);
     }
+
     .circle {
       width: 48px;
       height: 48px;
@@ -50,21 +55,24 @@
       justify-content: center;
       font-size: 24px;
       font-weight: bold;
-      color: white;
       margin-bottom: 0.5rem;
     }
+
     .open {
       background-color: #f4c721;
-      color: black;
+      color: #000;
     }
+
     .closed {
       background-color: #000;
-      color: white;
+      color: #fff;
     }
+
     .date {
       font-size: 13px;
       font-weight: bold;
     }
+
     .today-label {
       font-size: 10px;
       color: #888;
@@ -78,7 +86,7 @@
   </div>
 
   <script>
-    const spreadsheetId = '2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv';
+    const spreadsheetId = '1YG6NuCkT4u4RUm9zjfNV2JO5oXoLmG7utTbm5Iq7oNA';
     const apiKey = 'AIzaSyDiUmlBqV778uK3fpKOklP0k4Zy7RLGaXg';
     const sheetName = 'Tabellenblatt1';
 
@@ -95,8 +103,9 @@
       if (isFaded) card.classList.add("faded");
 
       const circle = document.createElement("div");
-      circle.className = "circle " + (status.toLowerCase() === "geöffnet" ? "open" : "closed");
-      circle.textContent = status.toLowerCase() === "geöffnet" ? "✓" : "✕";
+      const normalized = status.toLowerCase().trim();
+      circle.className = "circle " + (normalized === "geöffnet" ? "open" : "closed");
+      circle.textContent = normalized === "geöffnet" ? "✓" : "✕";
 
       const dateLabel = document.createElement("div");
       dateLabel.className = "date";
@@ -138,10 +147,14 @@
 
     function render(einträge) {
       const carousel = document.getElementById("carousel");
-
       const todayFormatted = formatDate(new Date());
-
       const indexHeute = einträge.findIndex(e => e.datum === todayFormatted);
+
+      if (indexHeute === -1) {
+        carousel.innerHTML = "<p style='color:#888'>Kein Datum für heute gefunden.</p>";
+        return;
+      }
+
       const center = 2;
       const startIndex = Math.max(0, indexHeute - center);
       const visible = einträge.slice(startIndex, startIndex + 5);
