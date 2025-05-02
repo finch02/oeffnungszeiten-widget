@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Öffnungszeiten Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Öffnungszeiten</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,27 +12,46 @@
     }
     .status {
       font-size: 2rem;
-      color: green;
     }
   </style>
 </head>
 <body>
   <h1>Heute ist der Status:</h1>
-  <div class="status" id="status">wird geladen...</div>
+  <div id="status" class="status">wird geladen...</div>
 
   <script>
-    const daten = {
-      "02.05.2025": "geöffnet",
-      "03.05.2025": "geschlossen"
-    };
+    const sheetId = "1_-KJFMmaI7YNRvXh84RmB7Fz29mW4a6lFA7d_aVyFqaU";
+    const sheetName = "Tabelle1";
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-    const heute = new Date();
-    const tag = `${heute.getDate().toString().padStart(2, "0")}.${(heute.getMonth()+1).toString().padStart(2, "0")}.${heute.getFullYear()}`;
-    console.log("Tag erkannt:", tag);
+    const heute = new Date().toLocaleDateString("de-DE");
 
-    const status = daten[tag] || "Keine Daten";
-    document.getElementById("status").textContent = status;
-    document.getElementById("status").style.color = status === "geöffnet" ? "green" : "red";
+    fetch(url)
+      .then(res => res.text())
+      .then(data => {
+        const json = JSON.parse(data.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        let status = "Keine Daten";
+
+        for (let row of rows) {
+          const datum = row.c[0]?.v;
+          const wert = row.c[1]?.v;
+
+          if (datum === heute) {
+            status = wert;
+            break;
+          }
+        }
+
+        const statusEl = document.getElementById("status");
+        statusEl.textContent = status;
+        statusEl.style.color = status === "geöffnet" ? "green" : "red";
+      })
+      .catch(error => {
+        console.error("Fehler beim Laden der Tabelle:", error);
+        document.getElementById("status").textContent = "Fehler beim Laden";
+      });
   </script>
 </body>
 </html>
