@@ -2,66 +2,69 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Öffnungszeiten-Ampel</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 40px 0;
       text-align: center;
+      background: #fafafa;
+      margin: 0;
+      padding: 2rem;
     }
 
     h1 {
-      margin-bottom: 40px;
+      margin-bottom: 2rem;
     }
 
-    .carousel-container {
+    .carousel {
       display: flex;
-      justify-content: center;
-      align-items: center;
       overflow-x: auto;
       scroll-behavior: smooth;
-      padding: 20px;
-      gap: 20px;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1rem;
+      gap: 1.5rem;
+      justify-content: center;
     }
 
     .card {
-      flex: 0 0 120px;
+      flex: 0 0 auto;
+      width: 120px;
+      height: 160px;
+      border-radius: 16px;
       background: white;
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
-      padding: 20px 10px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       transition: transform 0.3s ease, opacity 0.3s ease;
-      text-align: center;
     }
 
-    .card.dimmed {
-      opacity: 0.2;
+    .card.faded {
+      opacity: 0.3;
       transform: scale(0.9);
     }
 
     .circle {
       width: 60px;
       height: 60px;
-      margin: 0 auto 10px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 28px;
       font-weight: bold;
+      color: white;
+      margin-bottom: 0.5rem;
     }
 
     .open {
-      background-color: #f4c721;
-      color: white;
+      background-color: #f4c721; /* Gelb */
     }
 
     .closed {
-      background-color: black;
-      color: white;
+      background-color: #000;
     }
 
     .date {
@@ -72,61 +75,74 @@
 </head>
 <body>
   <h1>Öffnungszeiten-Ampel</h1>
-  <div id="carousel" class="carousel-container"></div>
+  <div class="carousel" id="carousel"></div>
 
   <script>
-    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?gid=0&single=true&output=csv";
+    const daten = {
+      "01.05.2025": "geschlossen",
+      "02.05.2025": "geöffnet",
+      "03.05.2025": "geöffnet",
+      "04.05.2025": "geschlossen",
+      "05.05.2025": "geöffnet",
+      "06.05.2025": "geöffnet",
+      "07.05.2025": "geschlossen",
+      "08.05.2025": "geöffnet",
+      "09.05.2025": "geschlossen",
+      "10.05.2025": "geöffnet",
+      "11.05.2025": "geöffnet",
+      "12.05.2025": "geschlossen",
+      "13.05.2025": "geöffnet",
+      "14.05.2025": "geschlossen",
+      "15.05.2025": "geöffnet"
+    };
 
-    fetch(sheetURL)
-      .then(res => res.text())
-      .then(csv => {
-        const rows = csv.trim().split('\n').slice(1); // skip header
-        const data = rows.map(row => {
-          const [tag, status] = row.split(',');
-          return { tag: tag.trim(), status: status.trim() };
-        });
+    const heute = new Date();
+    const formatter = new Intl.DateTimeFormat('de-DE');
 
-        const carousel = document.getElementById('carousel');
-
-        data.forEach((entry, i) => {
-          const card = document.createElement('div');
-          card.className = 'card';
-
-          const circle = document.createElement('div');
-          circle.className = `circle ${entry.status === 'geöffnet' ? 'open' : 'closed'}`;
-          circle.textContent = entry.status === 'geöffnet' ? '✓' : '✖';
-
-          const date = document.createElement('div');
-          date.className = 'date';
-          date.textContent = entry.tag;
-
-          card.appendChild(circle);
-          card.appendChild(date);
-
-          carousel.appendChild(card);
-        });
-
-        updateDimmedCards();
-      });
-
-    function updateDimmedCards() {
-      const cards = document.querySelectorAll('.card');
-      cards.forEach(card => card.classList.remove('dimmed'));
-
-      const container = document.getElementById('carousel');
-      container.addEventListener('scroll', () => {
-        const center = container.scrollLeft + container.offsetWidth / 2;
-        cards.forEach(card => {
-          const rect = card.getBoundingClientRect();
-          const cardCenter = rect.left + rect.width / 2;
-          const distance = Math.abs(container.offsetWidth / 2 - cardCenter);
-          card.classList.toggle('dimmed', distance > 100);
-        });
-      });
-
-      // Initial state
-      setTimeout(() => container.dispatchEvent(new Event('scroll')), 100);
+    function formatDate(date) {
+      return formatter.format(date);
     }
+
+    function createCard(dateStr, status, isFaded = false) {
+      const card = document.createElement("div");
+      card.className = "card";
+      if (isFaded) card.classList.add("faded");
+
+      const circle = document.createElement("div");
+      circle.className = `circle ${status === "geöffnet" ? "open" : "closed"}`;
+      circle.textContent = status === "geöffnet" ? "✓" : "✕";
+
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "date";
+      dateLabel.textContent = dateStr;
+
+      card.appendChild(circle);
+      card.appendChild(dateLabel);
+      return card;
+    }
+
+    const carousel = document.getElementById("carousel");
+    let scrollToCardIndex = 0;
+
+    for (let i = 0; i < 14; i++) {
+      const datum = new Date();
+      datum.setDate(heute.getDate() + i);
+      const formatted = formatDate(datum);
+      const status = daten[formatted] || "geschlossen";
+
+      const isToday = i === 0;
+      const isFaded = i < 1 || i > 3; // z. B. nur 3 Hauptkarten sichtbar, Rest blass
+      const card = createCard(formatted, status, isFaded);
+      carousel.appendChild(card);
+
+      if (isToday) scrollToCardIndex = i;
+    }
+
+    // Automatisch auf heutige Karte scrollen
+    window.onload = () => {
+      const cardWidth = document.querySelector(".card").offsetWidth + 24; // inkl. Gap
+      carousel.scrollLeft = scrollToCardIndex * cardWidth - window.innerWidth / 2 + cardWidth;
+    };
   </script>
 </body>
 </html>
