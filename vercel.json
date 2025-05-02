@@ -5,9 +5,14 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors https://framer.com https://*.framer.app"
+          "value": "frame-ancestors *"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "ALLOWALL"
         }
       ]
     }
   ]
 }
+
