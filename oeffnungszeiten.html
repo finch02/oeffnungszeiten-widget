@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Öffnungszeiten</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 10px;
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            background: transparent;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        .punkt {
+            text-align: center;
+            opacity: 1;
+        }
+        .punkt.vergessen {
+            opacity: 0.4;
+        }
+        .kreis {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: auto;
+        }
+        .text {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="punkte"></div>
+
+    <script>
+        const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv";
+
+        fetch(sheetUrl)
+            .then(response => response.text())
+            .then(data => {
+                const rows = data.split("\n").slice(1).map(r => r.split(","));
+                const daten = rows.map(([datum, status]) => ({
+                    datum: datum.trim(),
+                    status: status.trim().toLowerCase()
+                }));
+
+                const heute = new Date();
+                const heuteStr = heute.toLocaleDateString("de-DE").slice(0, 8).replace(/\./g, "-").slice(0, -1);
+                const indexHeute = daten.findIndex(d => d.datum === heuteStr);
+
+                const sichtbar = daten.slice(indexHeute - 1, indexHeute + 2);
+
+                const container = document.getElementById("punkte");
+                sichtbar.forEach(d => {
+                    const div = document.createElement("div");
+                    div.className = "punkt" + (d.datum < heuteStr ? " vergessen" : "");
+                    const farbe = d.status === "geöffnet" ? "green" : "red";
+                    div.innerHTML = `<div class="kreis" style="background:${farbe}"></div>
+                                     <div class="text">${d.datum.slice(0, 5).replace("-", ".")}${d.datum === heuteStr ? " (heute)" : ""}</div>`;
+                    container.appendChild(div);
+                });
+            });
+    </script>
+</body>
+</html>
