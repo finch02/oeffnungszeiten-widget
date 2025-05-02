@@ -1,108 +1,123 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <title>Öffnungszeiten-Ampel</title>
+  <meta charset="UTF-8">
+  <title>Status-Ampel</title>
   <style>
     body {
-      font-family: sans-serif;
-      margin: 20px;
-      background: #f8f8f8;
-      text-align: center;
-    }
-    .ampel-container {
+      font-family: Arial, sans-serif;
+      background: #fff;
       display: flex;
       justify-content: center;
-      gap: 40px;
-      margin-top: 40px;
+      align-items: center;
+      height: 100vh;
+      overflow-x: hidden;
     }
-    .punkt {
+
+    .carousel-container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .arrow {
+      font-size: 2rem;
+      cursor: pointer;
+      color: #111;
+      opacity: 0.6;
+      user-select: none;
+    }
+
+    .status-box {
       display: flex;
       flex-direction: column;
       align-items: center;
-      opacity: 1;
+      width: 80px;
+      transition: transform 0.3s ease;
     }
-    .punkt.vergessen {
-      opacity: 0.4;
-    }
-    .kreis {
+
+    .circle {
       width: 60px;
       height: 60px;
       border-radius: 50%;
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
       font-weight: bold;
       color: white;
-      font-size: 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-    .datum {
-      margin-top: 8px;
-      font-size: 12px;
+
+    .yellow {
+      background: #ffd600;
+    }
+
+    .black {
+      background: #111;
+    }
+
+    .faded {
+      background: #ddd;
+      color: transparent;
+    }
+
+    .date {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #333;
+    }
+
+    .label {
+      font-size: 0.9rem;
+      margin-top: 6px;
+      font-weight: bold;
+    }
+
+    .hidden {
+      opacity: 0.3;
+      transform: scale(0.9);
     }
   </style>
 </head>
 <body>
-  <h1>Öffnungszeiten-Ampel</h1>
-  <div class="ampel-container" id="ampel"></div>
+  <div class="carousel-container">
+    <div class="arrow" onclick="scrollLeft()">‹</div>
+
+    <div class="status-box hidden">
+      <div class="circle faded">-</div>
+      <div class="date">24.04.2024</div>
+    </div>
+
+    <div class="status-box">
+      <div class="circle black">CLOSED</div>
+      <div class="date">25.04.2024</div>
+    </div>
+
+    <div class="status-box">
+      <div class="circle yellow">OPEN</div>
+      <div class="date">26.04.2024</div>
+    </div>
+
+    <div class="status-box">
+      <div class="circle yellow">OPEN</div>
+      <div class="date">27.04.2024</div>
+    </div>
+
+    <div class="status-box hidden">
+      <div class="circle faded">-</div>
+      <div class="date">28.04.2024</div>
+    </div>
+
+    <div class="arrow" onclick="scrollRight()">›</div>
+  </div>
 
   <script>
-    const sheetId = "1_-KJFMmaI7YNRvXh84RmB7Fz29mW4a6lFA7d_aVyFqaU";
-    const sheetName = "Tabelle1";
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
-
-    function formatDate(date) {
-      const d = new Date(date);
-      return d.toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
+    function scrollLeft() {
+      // Optional Scrollfunktion
     }
-
-    fetch(url)
-      .then(res => res.text())
-      .then(data => {
-        const json = JSON.parse(data.substr(47).slice(0, -2));
-        const rows = json.table.rows;
-        const statusMap = {};
-        for (let row of rows) {
-          const date = row.c[0]?.v;
-          const status = row.c[1]?.v;
-          if (date && status) {
-            statusMap[date] = status;
-          }
-        }
-
-        const container = document.getElementById("ampel");
-        const heute = new Date();
-
-        for (let offset = -1; offset <= 1; offset++) {
-          const d = new Date(heute);
-          d.setDate(d.getDate() + offset);
-          const datum = formatDate(d);
-          const status = statusMap[datum] || "unbekannt";
-
-          const punkt = document.createElement("div");
-          punkt.className = "punkt" + (offset === -1 ? " vergessen" : "");
-
-          const farbe = status.toLowerCase() === "geöffnet" ? "gold" :
-                        status.toLowerCase() === "geschlossen" ? "black" : "gray";
-          const text = status.toLowerCase() === "geöffnet" ? "open" :
-                       status.toLowerCase() === "geschlossen" ? "closed" : "?";
-
-          punkt.innerHTML = `
-            <div class="kreis" style="background:${farbe}">${text}</div>
-            <div class="datum">${datum.slice(0, 5)}${offset === 0 ? " (heute)" : ""}</div>
-          `;
-
-          container.appendChild(punkt);
-        }
-      })
-      .catch(err => {
-        console.error("Fehler beim Laden:", err);
-        document.getElementById("ampel").innerHTML = "<p>Fehler beim Laden der Daten.</p>";
-      });
+    function scrollRight() {
+      // Optional Scrollfunktion
+    }
   </script>
 </body>
 </html>
