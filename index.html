@@ -13,17 +13,17 @@
       padding: 2rem;
       text-align: center;
     }
+
     h1 { margin-bottom: 2rem; }
 
     .carousel-wrapper {
-      width: 100%;
       overflow-x: auto;
-      display: flex;
-      justify-content: center;
+      -webkit-overflow-scrolling: touch;
+      margin: 0 auto;
     }
 
     .carousel {
-      display: flex;
+      display: inline-flex;
       gap: 1.2rem;
       justify-content: center;
       padding: 0 1rem;
@@ -60,7 +60,7 @@
 
     .open {
       background-color: #f4c721;
-      color: #000;
+      color: white;
     }
 
     .closed {
@@ -179,6 +179,8 @@
 
     function render(einträge) {
       const carousel = document.getElementById("carousel");
+      carousel.innerHTML = "";
+
       const todayFormatted = normalizeDate(formatDate(new Date()));
       const indexHeute = einträge.findIndex(e => normalizeDate(e.datum) === todayFormatted);
 
