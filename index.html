@@ -211,14 +211,13 @@
           carousel.appendChild(div);
         });
 
-        // Scroll „heute“ in die Mitte (z. B. bei 5 Sichtbaren)
-        if (todayIndex >= 0) {
+        // Scroll zu „heute“ → mittig anzeigen (Index 2 von 5)
+        const targetIndex = Math.max(2, todayIndex); // falls z. B. < 3 Einträge
+        const el = carousel.children[targetIndex];
+        if (el) {
           setTimeout(() => {
-            const el = carousel.children[todayIndex];
-            if (el) {
-              const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
-              carousel.scrollTo({ left: offset, behavior: 'smooth' });
-            }
+            const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
+            carousel.scrollTo({ left: offset, behavior: 'smooth' });
           }, 100);
         }
       });
