@@ -8,110 +8,130 @@
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 20px;
+      padding: 40px;
+      background-color: #fcfcfc;
     }
+
     h1 {
-      margin-bottom: 30px;
+      margin-bottom: 40px;
     }
-    .ampel-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
-      overflow-x: auto;
-      padding: 20px;
+
+    .carousel-container {
       position: relative;
+      width: 100%;
+      overflow: hidden;
     }
-    .ampel {
-      flex: 0 0 100px;
-      text-align: center;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      gap: 24px;
+      justify-content: center;
+      scroll-snap-type: x mandatory;
+      padding: 0 60px;
     }
+
+    .card {
+      flex: 0 0 auto;
+      width: 120px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      padding: 20px;
+      scroll-snap-align: center;
+      z-index: 2;
+      transition: transform 0.3s;
+    }
+
+    .ghost {
+      opacity: 0.3;
+      transform: scale(0.85);
+      filter: blur(1px);
+      z-index: 1;
+    }
+
     .circle {
       width: 60px;
       height: 60px;
-      border-radius: 50%;
       margin: 0 auto 10px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 26px;
+      font-size: 22px;
       font-weight: bold;
-      color: white;
     }
+
     .open {
       background-color: yellow;
       color: white;
     }
+
     .closed {
       background-color: black;
       color: white;
     }
-    .date-label {
-      font-size: 12px;
-      color: #555;
+
+    .date {
+      font-size: 14px;
+      color: #444;
     }
+
     .arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 32px;
-      color: #ccc;
-      z-index: 1;
+      font-size: 30px;
+      color: #bbb;
       user-select: none;
+      pointer-events: none;
+      z-index: 3;
     }
+
     .arrow.left {
-      left: 5px;
+      left: 20px;
     }
+
     .arrow.right {
-      right: 5px;
+      right: 20px;
     }
   </style>
 </head>
 <body>
   <h1>Öffnungszeiten-Ampel</h1>
-  <div class="arrow left">‹</div>
-  <div class="ampel-container" id="ampelContainer"></div>
-  <div class="arrow right">›</div>
 
-  <script>
-    const sheetId = "2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv";
-    const sheetURL = `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=0&single=true&output=csv`;
-    const proxyURL = `https://api.allorigins.win/raw?url=${encodeURIComponent(sheetURL)}`;
+  <div class="carousel-container">
+    <div class="arrow left">❮</div>
 
-    fetch(proxyURL)
-      .then(response => response.text())
-      .then(csv => {
-        const rows = csv.split("\n").slice(1); // skip header
-        const data = rows.map(row => {
-          const [date, status] = row.split(",");
-          return { date: date.trim(), status: status.trim().toLowerCase() };
-        });
+    <div class="carousel">
+      <!-- Linker Ghost -->
+      <div class="card ghost">
+        <div class="circle closed">✖</div>
+        <div class="date">01.05.25</div>
+      </div>
 
-        const today = new Date();
-        const todayIndex = data.findIndex(entry => entry.date === today.toLocaleDateString("de-DE"));
-        const start = Math.max(0, todayIndex - 1);
-        const displayDays = data.slice(start, start + 3);
+      <!-- Haupt-Elemente -->
+      <div class="card">
+        <div class="circle open">✔</div>
+        <div class="date">02.05.25</div>
+      </div>
+      <div class="card">
+        <div class="circle closed">✖</div>
+        <div class="date">03.05.25</div>
+      </div>
+      <div class="card">
+        <div class="circle open">✔</div>
+        <div class="date">04.05.25</div>
+      </div>
 
-        const container = document.getElementById("ampelContainer");
-        displayDays.forEach(entry => {
-          const isOpen = entry.status === "geöffnet";
-          const symbol = isOpen ? "✓" : "✕";
-          const div = document.createElement("div");
-          div.className = "ampel";
-          div.innerHTML = `
-            <div class="circle ${isOpen ? 'open' : 'closed'}">${symbol}</div>
-            <div class="date-label">${entry.date}</div>
-          `;
-          container.appendChild(div);
-        });
-      })
-      .catch(err => {
-        document.getElementById("ampelContainer").innerHTML = "Fehler beim Laden der Daten.";
-        console.error(err);
-      });
-  </script>
+      <!-- Rechter Ghost -->
+      <div class="card ghost">
+        <div class="circle open">✔</div>
+        <div class="date">05.05.25</div>
+      </div>
+    </div>
+
+    <div class="arrow right">❯</div>
+  </div>
 </body>
 </html>
