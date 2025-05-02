@@ -18,17 +18,19 @@
 </head>
 <body>
   <h1>Heute ist der Status:</h1>
-  <div class="status" id="status">Wird geladen...</div>
+  <div class="status" id="status">wird geladen...</div>
 
   <script>
-    // Simulierter Tagesstatus (normalerweise aus Google Sheets)
+    // Simulierte Öffnungszeiten-Daten
     const daten = {
       "02.05.2025": "geöffnet",
       "03.05.2025": "geschlossen"
     };
 
     const heute = new Date();
-    const tag = heute.toLocaleDateString("de-DE");
+    const tag = heute.toLocaleDateString("de-DE").split(".").join(".");
+    console.log("Erkannter Tag:", tag); // Debug-Ausgabe
+
     const status = daten[tag] || "Keine Daten";
 
     document.getElementById("status").textContent = status;
@@ -36,4 +38,3 @@
   </script>
 </body>
 </html>
-
