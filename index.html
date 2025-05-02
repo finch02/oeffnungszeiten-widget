@@ -38,10 +38,13 @@
       scroll-snap-type: x mandatory;
       padding: 10px 0;
       flex: 1;
+      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
     }
 
     .day {
-      flex: 0 0 calc(100% / 5 - 13px); /* exakt 5 Karten sichtbar inkl. gap */
+      flex: 0 0 auto;
+      width: 90px;
       text-align: center;
       scroll-snap-align: center;
     }
@@ -95,7 +98,7 @@
 
     @media (max-width: 480px) {
       .day {
-        flex: 0 0 calc(100% / 5 - 9px);
+        width: 70px;
       }
 
       .circle {
@@ -208,7 +211,7 @@
           carousel.appendChild(div);
         });
 
-        // Scroll „heute“ in die Mitte (3. von 5)
+        // Scroll „heute“ in die Mitte (z. B. bei 5 Sichtbaren)
         if (todayIndex >= 0) {
           setTimeout(() => {
             const el = carousel.children[todayIndex];
