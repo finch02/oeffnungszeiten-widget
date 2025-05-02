@@ -1,100 +1,171 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Amperstrand Ampel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Öffnungszeiten-Ampel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      font-family: sans-serif;
-      background: #111;
-      color: #fff;
+      background: #fff;
+      color: #000;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
+      padding: 2rem 1rem;
     }
 
-    .carousel-container {
-      overflow-x: scroll;
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .carousel-wrapper {
       display: flex;
-      gap: 10px;
-      scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
-      padding: 1rem;
+      align-items: center;
       width: 100%;
       max-width: 600px;
     }
 
-    .day {
-      flex: 0 0 100px;
-      height: 150px;
-      scroll-snap-align: center;
-      border-radius: 12px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      transition: transform 0.3s, opacity 0.3s;
+    .arrow {
+      font-size: 2rem;
+      cursor: pointer;
+      user-select: none;
+      padding: 0 10px;
+      color: #888;
     }
 
-    .day.open {
-      background-color: #f4c721;
+    .arrow:hover {
       color: #000;
     }
 
-    .day.closed {
+    .carousel {
+      display: flex;
+      gap: 16px;
+      overflow-x: scroll;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding: 10px 0;
+      flex: 1;
+    }
+
+    .day {
+      flex: 0 0 auto;
+      width: 90px;
+      text-align: center;
+      scroll-snap-align: center;
+    }
+
+    .circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 0.5rem;
+    }
+
+    .open {
+      background-color: #f4c721;
+      color: #fff;
+    }
+
+    .closed {
       background-color: #000;
       color: #fff;
     }
 
-    .day.faded {
-      opacity: 0.4;
+    .date {
+      font-weight: bold;
+      font-size: 0.9rem;
     }
 
-    .day.today {
-      transform: scale(1.15);
-      outline: 2px solid white;
+    .today {
+      font-weight: 700;
+    }
+
+    .today::after {
+      content: ' (heute)';
+      font-weight: 400;
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 480px) {
+      .carousel {
+        gap: 10px;
+      }
+      .circle {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="carousel-container" id="carousel">
-    <!-- Tageskarten werden per JS eingefügt -->
+
+  <h1>Öffnungszeiten-Ampel</h1>
+
+  <div class="carousel-wrapper">
+    <div class="arrow" onclick="scrollCarousel(-1)">&#8249;</div>
+    <div class="carousel" id="carousel">
+      <!-- JS füllt hier die Tage ein -->
+    </div>
+    <div class="arrow" onclick="scrollCarousel(1)">&#8250;</div>
   </div>
 
   <script>
-    // Beispiel-Daten, werden später durch API ersetzt
-    const data = Array.from({ length: 14 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      return {
-        date: date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }),
-        open: Math.random() > 0.5 // Zufällig offen oder geschlossen
-      };
-    });
-
     const carousel = document.getElementById('carousel');
-    const todayIndex = 0 + 2; // Heute soll in der Mitte der 5er-Ansicht sein
+    const days = 14;
 
-    data.forEach((entry, i) => {
+    // Beispiel-Daten (true = offen, false = geschlossen)
+    const openings = Array.from({ length: days }, () => Math.random() > 0.5);
+
+    const today = new Date();
+    const dayElements = [];
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(today.getDate() + i);
+
+      const isToday = i === 0;
+      const isOpen = openings[i];
+
       const div = document.createElement('div');
-      div.className = `day ${entry.open ? 'open' : 'closed'} ${i !== todayIndex ? 'faded' : ''} ${i === todayIndex ? 'today' : ''}`;
-      div.innerHTML = `<div>${entry.date}</div><div>${entry.open ? 'Geöffnet' : 'Geschlossen'}</div>`;
-      carousel.appendChild(div);
-    });
+      div.className = 'day';
 
-    // Auto-Scroll zu Heute (zentrieren)
+      const circle = document.createElement('div');
+      circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
+      circle.innerHTML = isOpen ? '✓' : '✕';
+
+      const dateText = document.createElement('div');
+      dateText.className = 'date' + (isToday ? ' today' : '');
+      dateText.textContent = date.toLocaleDateString('de-DE');
+
+      div.appendChild(circle);
+      div.appendChild(dateText);
+      dayElements.push(div);
+      carousel.appendChild(div);
+    }
+
+    // Scroll auf heute (Mitte)
     window.addEventListener('load', () => {
-      const children = carousel.children;
-      const target = children[todayIndex];
-      if (target) {
-        const offset = target.offsetLeft - (carousel.offsetWidth / 2) + (target.offsetWidth / 2);
+      const el = dayElements[2]; // heute auf Index 2 für zentrierte 5er Ansicht
+      if (el) {
+        const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
         carousel.scrollTo({ left: offset, behavior: 'smooth' });
       }
     });
+
+    function scrollCarousel(direction) {
+      const scrollAmount = dayElements[0].offsetWidth + 16; // Breite + Gap
+      carousel.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
+    }
   </script>
+
 </body>
 </html>
