@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Öffnungszeiten-Ampel</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #fafafa;
@@ -20,33 +24,32 @@
     .carousel-wrapper {
       width: 100%;
       overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      display: flex;
+      justify-content: center;
     }
 
     .carousel {
       display: flex;
-      gap: 1.5rem;
-      padding: 1rem;
-      justify-content: center;
-      width: max-content;
-      margin: 0 auto;
+      gap: 1.2rem;
+      padding: 1rem 0;
+      scroll-behavior: smooth;
     }
 
     .card {
-      flex: 0 0 auto;
-      width: 100px;
+      flex: 0 0 100px;
       height: 140px;
+      border-radius: 9999px;
+      background: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      border-radius: 16px;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
-    .faded {
-      opacity: 0.3;
-      transform: scale(0.9);
+    .card.faded {
+      opacity: 0.2;
+      transform: scale(0.92);
     }
 
     .circle {
@@ -71,13 +74,13 @@
     }
 
     .date {
-      font-size: 14px;
+      font-size: 13px;
       font-weight: bold;
     }
 
     .today-label {
-      font-size: 11px;
-      color: #777;
+      font-size: 10px;
+      color: #888;
     }
   </style>
 </head>
@@ -88,31 +91,21 @@
   </div>
 
   <script>
-    async function fetchSheetData() {
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
-      const response = await fetch(sheetUrl);
-      const text = await response.text();
-      const rows = text.split('\n').slice(1);
-      return rows.map(row => {
-        const [datum, status] = row.split(',');
-        return {
-          datum: datum.trim(),
-          status: status?.trim().toLowerCase()
-        };
-      });
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
+
+    function formatDate(date) {
+      return date.toLocaleDateString("de-DE");
     }
 
-    function formatDate(d) {
-      return d.toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric"
-      });
+    function normalizeDate(str) {
+      const parts = str.split(".");
+      return parts.map(p => parseInt(p)).join(".");
     }
 
     function createCard(dateStr, status, isToday, isFaded = false) {
       const card = document.createElement("div");
-      card.className = "card" + (isFaded ? " faded" : "");
+      card.className = "card";
+      if (isFaded) card.classList.add("faded");
 
       const circle = document.createElement("div");
       circle.className = "circle " + (status === "geöffnet" ? "open" : "closed");
@@ -135,35 +128,60 @@
       return card;
     }
 
-    async function render() {
-      const eintraege = await fetchSheetData();
-      const heute = new Date();
-      const heuteFormatted = formatDate(heute);
-
-      const indexHeute = eintraege.findIndex(e => e.datum === heuteFormatted);
-      if (indexHeute === -1) return;
-
+    function render(einträge) {
       const carousel = document.getElementById("carousel");
+      const heute = new Date();
+      const todayFormatted = normalizeDate(formatDate(heute));
+
+      const indexHeute = einträge.findIndex(e => normalizeDate(e.datum) === todayFormatted);
+      if (indexHeute === -1) {
+        carousel.innerHTML = "<p>Kein Datum für heute gefunden.</p>";
+        return;
+      }
+
+      const center = 2;
+      const startIndex = Math.max(0, indexHeute - center);
+      const visible = einträge.slice(startIndex, startIndex + 5);
+
       carousel.innerHTML = "";
 
-      const start = Math.max(0, indexHeute - 2);
-      const visible = eintraege.slice(start, start + 5);
-
       visible.forEach((eintrag, idx) => {
-        const isToday = eintrag.datum === heuteFormatted;
-        const isFaded = idx !== 2;
+        const isToday = normalizeDate(eintrag.datum) === todayFormatted;
+        const isFaded = idx !== center;
         const card = createCard(eintrag.datum, eintrag.status, isToday, isFaded);
         carousel.appendChild(card);
       });
 
-      // automatisch zur Mitte scrollen
+      // Auto-scroll zur Mitte
       setTimeout(() => {
         const cards = document.querySelectorAll('.card');
-        if (cards[2]) cards[2].scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
-      }, 100);
+        if (cards[2]) {
+          cards[2].scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+        }
+      }, 200);
     }
 
-    render();
+    function parseCSV(csv) {
+      const lines = csv.split("\n").map(l => l.trim()).filter(Boolean);
+      const data = lines.slice(1).map(line => {
+        const [datum, status] = line.split(",");
+        return { datum: datum.trim(), status: status.trim().toLowerCase() };
+      });
+      return data;
+    }
+
+    fetch(SHEET_URL)
+      .then(res => res.text())
+      .then(parseCSV)
+      .then(render)
+      .catch(err => {
+        document.getElementById("carousel").innerHTML = "<p>Fehler beim Laden der Daten.</p>";
+        console.error("Fehler beim Abrufen der Tabelle:", err);
+      });
   </script>
 </body>
 </html>
