@@ -1,174 +1,100 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Öffnungszeiten-Ampel</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amperstrand Ampel</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Arial', sans-serif;
-      background-color: #fafafa;
+      font-family: sans-serif;
+      background: #111;
+      color: #fff;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
+      height: 100vh;
     }
 
-    h1 {
-      margin: 40px 0 20px;
-      font-size: 2em;
-    }
-
-    .carousel {
+    .carousel-container {
+      overflow-x: scroll;
       display: flex;
-      gap: 16px;
-      overflow-x: auto;
-      padding: 20px 0;
-      scroll-behavior: smooth;
+      gap: 10px;
+      scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
+      padding: 1rem;
+      width: 100%;
+      max-width: 600px;
     }
 
-    .card {
-      flex: 0 0 auto;
-      width: 120px;
-      height: 160px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    .day {
+      flex: 0 0 100px;
+      height: 150px;
+      scroll-snap-align: center;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-
-    .card.dimmed {
-      opacity: 0.4;
-      transform: scale(0.9);
-    }
-
-    .circle {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      color: white;
-      border: none;
-    }
-
-    .open {
-      background-color: #f4c721;
-    }
-
-    .closed {
-      background-color: black;
-    }
-
-    .date {
-      margin-top: 12px;
       font-weight: bold;
+      transition: transform 0.3s, opacity 0.3s;
     }
 
-    .today-label {
-      font-size: 0.8em;
-      color: #777;
+    .day.open {
+      background-color: #f4c721;
+      color: #000;
     }
 
-    @media (max-width: 500px) {
-      .card {
-        width: 90px;
-        height: 130px;
-      }
+    .day.closed {
+      background-color: #000;
+      color: #fff;
+    }
 
-      .circle {
-        width: 50px;
-        height: 50px;
-        font-size: 22px;
-      }
+    .day.faded {
+      opacity: 0.4;
+    }
+
+    .day.today {
+      transform: scale(1.15);
+      outline: 2px solid white;
     }
   </style>
 </head>
 <body>
-  <h1>Öffnungszeiten-Ampel</h1>
-  <div class="carousel" id="carousel"></div>
+  <div class="carousel-container" id="carousel">
+    <!-- Tageskarten werden per JS eingefügt -->
+  </div>
 
   <script>
-    async function fetchEintraege() {
-      const url = 'https://opensheet.elk.sh/1u-K8VtiGMWkBscQbK-r8-BROXBxbEMVYcgyNvGyA4_c/Öffnungszeiten';
-      const res = await fetch(url);
-      return await res.json();
-    }
+    // Beispiel-Daten, werden später durch API ersetzt
+    const data = Array.from({ length: 14 }, (_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      return {
+        date: date.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' }),
+        open: Math.random() > 0.5 // Zufällig offen oder geschlossen
+      };
+    });
 
-    function normalizeDate(str) {
-      const parts = str.split(".");
-      return parts.map(p => parseInt(p)).join(";");
-    }
+    const carousel = document.getElementById('carousel');
+    const todayIndex = 0 + 2; // Heute soll in der Mitte der 5er-Ansicht sein
 
-    function formatDate(d) {
-      return d.toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
-      });
-    }
+    data.forEach((entry, i) => {
+      const div = document.createElement('div');
+      div.className = `day ${entry.open ? 'open' : 'closed'} ${i !== todayIndex ? 'faded' : ''} ${i === todayIndex ? 'today' : ''}`;
+      div.innerHTML = `<div>${entry.date}</div><div>${entry.open ? 'Geöffnet' : 'Geschlossen'}</div>`;
+      carousel.appendChild(div);
+    });
 
-    function createCard(datum, status, isToday, isDimmed) {
-      const card = document.createElement("div");
-      card.className = "card" + (isDimmed ? " dimmed" : "");
-
-      const circle = document.createElement("div");
-      circle.className = "circle " + (status === "geöffnet" ? "open" : "closed");
-      circle.textContent = status === "geöffnet" ? "✓" : "✕";
-
-      const dateLabel = document.createElement("div");
-      dateLabel.className = "date";
-      dateLabel.textContent = datum;
-
-      if (isToday) {
-        const todayLabel = document.createElement("div");
-        todayLabel.className = "today-label";
-        todayLabel.textContent = "(heute)";
-        card.appendChild(todayLabel);
+    // Auto-Scroll zu Heute (zentrieren)
+    window.addEventListener('load', () => {
+      const children = carousel.children;
+      const target = children[todayIndex];
+      if (target) {
+        const offset = target.offsetLeft - (carousel.offsetWidth / 2) + (target.offsetWidth / 2);
+        carousel.scrollTo({ left: offset, behavior: 'smooth' });
       }
-
-      card.appendChild(circle);
-      card.appendChild(dateLabel);
-      return card;
-    }
-
-    async function render() {
-      const eintraege = await fetchEintraege();
-      const carousel = document.getElementById("carousel");
-      const todayFormatted = normalizeDate(formatDate(new Date()));
-      const indexHeute = eintraege.findIndex(e => normalizeDate(e.datum) === todayFormatted);
-
-      if (indexHeute === -1) {
-        carousel.innerHTML = "<p>Kein Datum für heute gefunden.</p>";
-        return;
-      }
-
-      const startIndex = Math.max(0, indexHeute - 2);
-      const endIndex = Math.min(eintraege.length, indexHeute + 3);
-      const visible = eintraege.slice(startIndex, endIndex);
-
-      visible.forEach((eintrag, i) => {
-        const isToday = normalizeDate(eintrag.datum) === todayFormatted;
-        const isDimmed = i === 0 || i === visible.length - 1;
-        const card = createCard(eintrag.datum, eintrag.status, isToday, isDimmed);
-        carousel.appendChild(card);
-      });
-
-      setTimeout(() => {
-        const cards = carousel.querySelectorAll('.card');
-        const target = cards[2]; // Mitte (indexHeute)
-        if (target) target.scrollIntoView({ behavior: 'instant', inline: 'center', block: 'nearest' });
-      }, 100);
-    }
-
-    render();
+    });
   </script>
 </body>
 </html>
