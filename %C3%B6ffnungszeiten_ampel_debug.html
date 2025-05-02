@@ -1,0 +1,195 @@
+
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Öffnungszeiten-Ampel (Debug)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: Arial, sans-serif;
+      background: #fafafa;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+    h1 { margin-bottom: 2rem; }
+
+    .carousel-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      display: flex;
+      justify-content: center;
+    }
+
+    .carousel {
+      display: flex;
+      gap: 1.2rem;
+      justify-content: center;
+      padding: 0 1rem;
+    }
+
+    .card {
+      flex: 0 0 100px;
+      height: 140px;
+      border-radius: 16px;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .card.faded {
+      opacity: 0.2;
+      transform: scale(0.92);
+    }
+
+    .circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+
+    .open {
+      background-color: #f4c721;
+      color: #000;
+    }
+
+    .closed {
+      background-color: #000;
+      color: #fff;
+    }
+
+    .date {
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .today-label {
+      font-size: 10px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>Öffnungszeiten-Ampel (Debug)</h1>
+  <div class="carousel-wrapper">
+    <div class="carousel" id="carousel"></div>
+  </div>
+  <p id="debug" style="color:#999; font-size: 12px; margin-top: 1rem;"></p>
+
+  <script>
+    const spreadsheetId = '1YG6NuCkT4u4RUm9zjfNV2JO5oXoLmG7utTbm5Iq7oNA';
+    const apiKey = 'AIzaSyDiUmlBqV778uK3fpKOklP0k4Zy7RLGaXg';
+    const sheetName = 'Tabellenblatt1';
+
+    const heute = new Date();
+    const formatter = new Intl.DateTimeFormat("de-DE");
+
+    function formatDate(date) {
+      return formatter.format(date);
+    }
+
+    function normalizeDate(str) {
+      const parts = str.split(".");
+      return parts.map(p => parseInt(p)).join(".");
+    }
+
+    function createCard(dateStr, status, isToday, isFaded = false) {
+      const card = document.createElement("div");
+      card.className = "card";
+      if (isFaded) card.classList.add("faded");
+
+      const circle = document.createElement("div");
+      const normalized = status.toLowerCase().trim();
+      circle.className = "circle " + (normalized === "geöffnet" ? "open" : "closed");
+      circle.textContent = normalized === "geöffnet" ? "✓" : "✕";
+
+      const dateLabel = document.createElement("div");
+      dateLabel.className = "date";
+      dateLabel.textContent = dateStr;
+
+      card.appendChild(circle);
+      card.appendChild(dateLabel);
+
+      if (isToday) {
+        const todayNote = document.createElement("div");
+        todayNote.className = "today-label";
+        todayNote.textContent = "(heute)";
+        card.appendChild(todayNote);
+      }
+
+      return card;
+    }
+
+    async function fetchData() {
+      const debugEl = document.getElementById("debug");
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+
+        if (!json.values) {
+          debugEl.textContent = "⚠️ Keine Daten zurückgegeben.";
+          return;
+        }
+
+        const rows = json.values;
+        const header = rows[0];
+        const dateIdx = header.findIndex(h => h.toLowerCase().includes("tag"));
+        const statusIdx = header.findIndex(h => h.toLowerCase().includes("status"));
+
+        if (dateIdx === -1 || statusIdx === -1) {
+          debugEl.textContent = "❌ 'Tag' oder 'Status'-Spalte nicht gefunden.";
+          return;
+        }
+
+        const einträge = rows.slice(1).map(row => ({
+          datum: row[dateIdx],
+          status: row[statusIdx]
+        }));
+
+        debugEl.textContent = `✅ ${einträge.length} Einträge geladen. Heute ist ${formatDate(heute)}.`;
+        render(einträge);
+      } catch (err) {
+        console.error("Fehler beim Abrufen der Daten:", err);
+        document.getElementById("carousel").innerHTML = "<p style='color:red;'>Fehler beim Laden der Daten.</p>";
+        debugEl.textContent = "❌ Daten konnten nicht geladen werden.";
+      }
+    }
+
+    function render(einträge) {
+      const carousel = document.getElementById("carousel");
+      const todayFormatted = normalizeDate(formatDate(new Date()));
+      const indexHeute = einträge.findIndex(e => normalizeDate(e.datum) === todayFormatted);
+
+      if (indexHeute === -1) {
+        carousel.innerHTML = "<p style='color:#888'>Kein Datum für heute gefunden.</p>";
+        return;
+      }
+
+      const center = 2;
+      const startIndex = Math.max(0, indexHeute - center);
+      const visible = einträge.slice(startIndex, startIndex + 5);
+
+      visible.forEach((eintrag) => {
+        const isToday = normalizeDate(eintrag.datum) === todayFormatted;
+        const isFaded = !isToday;
+        const card = createCard(eintrag.datum, eintrag.status, isToday, isFaded);
+        carousel.appendChild(card);
+      });
+    }
+
+    fetchData();
+  </script>
+</body>
+</html>
