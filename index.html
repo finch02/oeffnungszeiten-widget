@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Öffnungszeiten-Ampel</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
       font-family: Arial, sans-serif;
       background: #fafafa;
@@ -29,8 +25,11 @@
 
     .carousel {
       display: flex;
+      gap: 1.5rem;
+      padding: 1rem;
       justify-content: center;
-      gap: 1rem;
+      width: max-content;
+      margin: 0 auto;
     }
 
     .card {
@@ -42,7 +41,6 @@
       align-items: center;
       justify-content: center;
       border-radius: 16px;
-      background: none;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
@@ -52,13 +50,13 @@
     }
 
     .circle {
-      width: 60px;
-      height: 60px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 30px;
+      font-size: 32px;
       font-weight: bold;
       color: white;
       margin-bottom: 0.5rem;
@@ -66,12 +64,10 @@
 
     .open {
       background-color: #f4c721;
-      color: white;
     }
 
     .closed {
       background-color: #000;
-      color: white;
     }
 
     .date {
@@ -81,13 +77,7 @@
 
     .today-label {
       font-size: 11px;
-      color: #555;
-    }
-
-    .debug-info {
-      margin-top: 1rem;
-      font-size: 14px;
-      color: #333;
+      color: #777;
     }
   </style>
 </head>
@@ -96,26 +86,31 @@
   <div class="carousel-wrapper">
     <div class="carousel" id="carousel"></div>
   </div>
-  <div id="debug" class="debug-info"></div>
 
   <script>
-    const sheetURL =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv";
-
-    function normalizeDate(str) {
-      const parts = str.split(".").map(p => parseInt(p, 10));
-      return parts.map(p => p.toString().padStart(2, "0")).join(".");
-    }
-
-    function formatDate(date) {
-      return date.toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "2-digit"
+    async function fetchSheetData() {
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
+      const response = await fetch(sheetUrl);
+      const text = await response.text();
+      const rows = text.split('\n').slice(1);
+      return rows.map(row => {
+        const [datum, status] = row.split(',');
+        return {
+          datum: datum.trim(),
+          status: status?.trim().toLowerCase()
+        };
       });
     }
 
-    function createCard(dateStr, status, isToday, isFaded) {
+    function formatDate(d) {
+      return d.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    }
+
+    function createCard(dateStr, status, isToday, isFaded = false) {
       const card = document.createElement("div");
       card.className = "card" + (isFaded ? " faded" : "");
 
@@ -140,49 +135,35 @@
       return card;
     }
 
-    async function fetchData() {
-      try {
-        const response = await fetch(sheetURL);
-        const text = await response.text();
-        const rows = text.split("\n").slice(1); // skip header
+    async function render() {
+      const eintraege = await fetchSheetData();
+      const heute = new Date();
+      const heuteFormatted = formatDate(heute);
 
-        const eintraege = rows.map(row => {
-          const [datum, status] = row.split(",").map(s => s.trim());
-          return { datum: normalizeDate(datum), status };
-        });
+      const indexHeute = eintraege.findIndex(e => e.datum === heuteFormatted);
+      if (indexHeute === -1) return;
 
-        render(eintraege);
-        document.getElementById("debug").innerHTML = `✅ ${eintraege.length} Einträge geladen. Heute ist ${formatDate(new Date())}.`;
-      } catch (e) {
-        document.getElementById("debug").textContent = "Fehler beim Laden der Daten.";
-      }
-    }
-
-    function render(eintraege) {
       const carousel = document.getElementById("carousel");
       carousel.innerHTML = "";
 
-      const heute = normalizeDate(formatDate(new Date()));
-      const indexHeute = eintraege.findIndex(e => e.datum === heute);
-
-      if (indexHeute === -1) {
-        carousel.innerHTML = "<p>Kein Datum für heute gefunden.</p>";
-        return;
-      }
-
-      const center = 2;
-      const start = Math.max(0, indexHeute - center);
+      const start = Math.max(0, indexHeute - 2);
       const visible = eintraege.slice(start, start + 5);
 
-      visible.forEach((e, i) => {
-        const isToday = e.datum === heute;
-        const isFaded = i !== center;
-        const card = createCard(e.datum, e.status, isToday, isFaded);
+      visible.forEach((eintrag, idx) => {
+        const isToday = eintrag.datum === heuteFormatted;
+        const isFaded = idx !== 2;
+        const card = createCard(eintrag.datum, eintrag.status, isToday, isFaded);
         carousel.appendChild(card);
       });
+
+      // automatisch zur Mitte scrollen
+      setTimeout(() => {
+        const cards = document.querySelectorAll('.card');
+        if (cards[2]) cards[2].scrollIntoView({ inline: "center", behavior: "smooth", block: "nearest" });
+      }, 100);
     }
 
-    fetchData();
+    render();
   </script>
 </body>
 </html>
