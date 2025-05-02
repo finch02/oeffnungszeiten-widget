@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Öffnungszeiten-Ampel</title>
+  <title>\u00d6ffnungszeiten-Ampel</title>
   <style>
     body {
       margin: 0;
@@ -21,7 +21,7 @@
 
     .carousel-wrapper {
       position: relative;
-      width: 100%;
+      width: 90%;
       max-width: 1000px;
       overflow: hidden;
     }
@@ -46,7 +46,6 @@
       align-items: center;
       justify-content: center;
       transition: transform 0.3s ease;
-      position: relative;
     }
 
     .card.dimmed {
@@ -81,7 +80,7 @@
 
     .today-label {
       font-size: 0.8em;
-      color: #666;
+      color: #555;
     }
 
     .arrow {
@@ -123,60 +122,29 @@
   </style>
 </head>
 <body>
-  <h1>Öffnungszeiten-Ampel</h1>
+  <h1>\u00d6ffnungszeiten-Ampel</h1>
   <div class="carousel-wrapper">
-    <button class="arrow left" onclick="scrollCarousel(-1)">‹</button>
+    <button class="arrow left" onclick="scrollCarousel(-1)">\u2039</button>
     <div class="carousel" id="carousel"></div>
-    <button class="arrow right" onclick="scrollCarousel(1)">›</button>
+    <button class="arrow right" onclick="scrollCarousel(1)">\u203a</button>
   </div>
 
   <script>
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
-
-    const carousel = document.getElementById('carousel');
-
-    fetch(sheetURL)
-      .then(response => response.text())
-      .then(csv => {
-        const rows = csv.trim().split('\n').slice(1);
-        const eintraege = rows.map(row => {
-          const [datum, status] = row.split(',');
-          return { datum: formatDate(datum), status };
-        });
-
-        const heute = formatDate(new Date());
-        const indexHeute = eintraege.findIndex(e => e.datum === heute);
-
-        const start = Math.max(0, indexHeute - 2);
-        const visible = eintraege.slice(start, start + 5);
-
-        visible.forEach((e, i) => {
-          const card = document.createElement('div');
-          card.className = 'card' + (i === 0 || i === 4 ? ' dimmed' : '');
-
-          const circle = document.createElement('div');
-          circle.className = `circle ${e.status === 'geöffnet' ? 'open' : 'closed'}`;
-          circle.textContent = e.status === 'geöffnet' ? '✓' : '✕';
-
-          const dateLabel = document.createElement('div');
-          dateLabel.className = 'date';
-          dateLabel.textContent = e.datum;
-
-          card.appendChild(circle);
-          card.appendChild(dateLabel);
-
-          if (e.datum === heute) {
-            const heuteLabel = document.createElement('div');
-            heuteLabel.className = 'today-label';
-            heuteLabel.textContent = '(heute)';
-            card.appendChild(heuteLabel);
-          }
-
-          carousel.appendChild(card);
-        });
+    async function ladeDaten() {
+      const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
+      const response = await fetch(url);
+      const text = await response.text();
+      const zeilen = text.trim().split('\n').slice(1); // Kopfzeile entfernen
+      const daten = {};
+      zeilen.forEach(zeile => {
+        const [datum, status] = zeile.split(',');
+        daten[datum.trim()] = status.trim();
       });
+      return daten;
+    }
 
     function scrollCarousel(direction) {
+      const carousel = document.getElementById('carousel');
       const scrollAmount = 140;
       carousel.scrollBy({
         left: scrollAmount * direction,
@@ -184,10 +152,62 @@
       });
     }
 
-    function formatDate(date) {
-      const d = new Date(date);
-      return d.toLocaleDateString('de-DE');
+    function formatiereDatum(date) {
+      return date.toLocaleDateString('de-DE');
     }
+
+    function zentriereHeute() {
+      const carousel = document.getElementById('carousel');
+      const heuteCard = carousel.querySelector('.card.today');
+      if (heuteCard) {
+        const rect = heuteCard.getBoundingClientRect();
+        const offset = rect.left - carousel.getBoundingClientRect().left - carousel.offsetWidth / 2 + rect.width / 2;
+        carousel.scrollBy({ left: offset, behavior: 'smooth' });
+      }
+    }
+
+    async function renderKarten() {
+      const daten = await ladeDaten();
+      const carousel = document.getElementById('carousel');
+      const heute = new Date();
+      const heuteStr = formatiereDatum(heute);
+
+      const datenKeys = Object.keys(daten);
+      const indexHeute = datenKeys.indexOf(heuteStr);
+      const sichtbareDaten = datenKeys.slice(Math.max(0, indexHeute - 2), indexHeute + 3);
+
+      sichtbareDaten.forEach((datum, i) => {
+        const status = daten[datum];
+        const card = document.createElement('div');
+        card.className = 'card';
+        if (datum === heuteStr) card.classList.add('today');
+        if (i === 0 || i === sichtbareDaten.length - 1) card.classList.add('dimmed');
+
+        const circle = document.createElement('div');
+        circle.className = `circle ${status === 'ge\u00f6ffnet' ? 'open' : 'closed'}`;
+        circle.textContent = status === 'ge\u00f6ffnet' ? '✓' : '✕';
+
+        const dateLabel = document.createElement('div');
+        dateLabel.className = 'date';
+        dateLabel.textContent = datum;
+
+        card.appendChild(circle);
+        card.appendChild(dateLabel);
+
+        if (datum === heuteStr) {
+          const heuteLabel = document.createElement('div');
+          heuteLabel.className = 'today-label';
+          heuteLabel.textContent = '(heute)';
+          card.appendChild(heuteLabel);
+        }
+
+        carousel.appendChild(card);
+      });
+
+      zentriereHeute();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderKarten);
   </script>
 </body>
 </html>
