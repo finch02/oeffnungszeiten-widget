@@ -30,19 +30,6 @@
       position: relative;
     }
 
-    .arrow {
-      font-size: 2rem;
-      cursor: pointer;
-      user-select: none;
-      padding: 0 10px;
-      color: #888;
-      z-index: 1;
-    }
-
-    .arrow:hover {
-      color: #000;
-    }
-
     .carousel {
       display: flex;
       gap: 16px;
@@ -54,8 +41,7 @@
     }
 
     .day {
-      flex: 0 0 auto;
-      width: 90px;
+      flex: 0 0 calc(100% / 5 - 13px); /* exakt 5 Karten sichtbar inkl. gap */
       text-align: center;
       scroll-snap-align: center;
     }
@@ -108,8 +94,8 @@
     }
 
     @media (max-width: 480px) {
-      .carousel {
-        gap: 10px;
+      .day {
+        flex: 0 0 calc(100% / 5 - 9px);
       }
 
       .circle {
@@ -130,9 +116,7 @@
   <h1>Öffnungszeiten-Ampel</h1>
 
   <div class="carousel-wrapper">
-    <div class="arrow" onclick="scrollCarousel(-1)">&#8249;</div>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow" onclick="scrollCarousel(1)">&#8250;</div>
   </div>
 
   <script>
@@ -150,11 +134,6 @@
         month: "2-digit",
         year: "2-digit",
       });
-    }
-
-    function scrollCarousel(direction) {
-      const scrollAmount = 106;
-      carousel.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
     }
 
     function createCheckmarkSVG() {
@@ -177,13 +156,14 @@
       .then((response) => response.text())
       .then((text) => {
         const lines = text.trim().split('\n').slice(1);
-        const eintraege = lines.map(line => {
+        const entries = lines.map(line => {
           const [datum, status] = line.split('\t');
           if (!datum || !status) return null;
+          const dateObj = normalizeDate(datum.trim());
           return {
             datum: datum.trim(),
             status: status.trim().toLowerCase(),
-            dateObj: normalizeDate(datum.trim())
+            dateObj
           };
         }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
@@ -191,18 +171,18 @@
         today.setHours(0, 0, 0, 0);
         const formattedToday = formatDate(today);
 
-        const indexToday = eintraege.findIndex(e =>
+        const upcoming = entries
+          .filter(e => e.dateObj >= today)
+          .slice(0, 14);
+
+        let todayIndex = upcoming.findIndex(e =>
           e.dateObj.toDateString() === today.toDateString()
         );
 
-        const start = Math.max(0, indexToday - 2);
-        const visibleDays = eintraege.slice(start, start + 5);
-        const elements = [];
-
-        visibleDays.forEach((e, i) => {
+        upcoming.forEach((e, i) => {
           const div = document.createElement('div');
           div.className = 'day';
-          if (i === 0 || i === visibleDays.length - 1) div.classList.add('dimmed');
+          if (i === 0 || i === upcoming.length - 1) div.classList.add('dimmed');
 
           const circle = document.createElement('div');
           const isOpen = e.status === 'geöffnet';
@@ -226,8 +206,18 @@
           div.appendChild(circle);
           div.appendChild(dateText);
           carousel.appendChild(div);
-          elements.push(div);
         });
+
+        // Scroll „heute“ in die Mitte (3. von 5)
+        if (todayIndex >= 0) {
+          setTimeout(() => {
+            const el = carousel.children[todayIndex];
+            if (el) {
+              const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
+              carousel.scrollTo({ left: offset, behavior: 'smooth' });
+            }
+          }, 100);
+        }
       });
   </script>
 
