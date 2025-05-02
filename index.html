@@ -28,7 +28,7 @@
     };
 
     const heute = new Date();
-    const tag = heute.toLocaleDateString("de-DE").split(".").join(".");
+    const tag = heute.toLocaleDateString("de-DE");
     const status = daten[tag] || "Keine Daten";
 
     document.getElementById("status").textContent = status;
