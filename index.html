@@ -211,15 +211,14 @@
           carousel.appendChild(div);
         });
 
-        // Scroll zu „heute“ → mittig anzeigen (Index 2 von 5)
-        const targetIndex = Math.max(2, todayIndex); // falls z. B. < 3 Einträge
-        const el = carousel.children[targetIndex];
-        if (el) {
-          setTimeout(() => {
-            const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
+        // 💡 Scroll „heute“ in die Mitte → Index - 2 = zentrierte Position
+        setTimeout(() => {
+          if (todayIndex >= 0 && carousel.children.length > todayIndex) {
+            const targetEl = carousel.children[todayIndex - 2] || carousel.children[0];
+            const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
             carousel.scrollTo({ left: offset, behavior: 'smooth' });
-          }, 100);
-        }
+          }
+        }, 100);
       });
   </script>
 
