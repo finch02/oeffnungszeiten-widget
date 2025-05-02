@@ -7,14 +7,19 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      text-align: center;
       background: #fafafa;
       margin: 0;
       padding: 2rem;
+      text-align: center;
     }
 
     h1 {
       margin-bottom: 2rem;
+    }
+
+    .carousel-wrapper {
+      display: flex;
+      justify-content: center;
     }
 
     .carousel {
@@ -22,9 +27,8 @@
       overflow-x: auto;
       scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 1rem;
       gap: 1.5rem;
-      justify-content: center;
+      padding: 1rem;
     }
 
     .card {
@@ -60,7 +64,7 @@
     }
 
     .open {
-      background-color: #f4c721; /* Gelb */
+      background-color: #f4c721;
     }
 
     .closed {
@@ -71,11 +75,18 @@
       font-size: 14px;
       font-weight: bold;
     }
+
+    .today-label {
+      font-size: 11px;
+      color: #888;
+    }
   </style>
 </head>
 <body>
   <h1>Öffnungszeiten-Ampel</h1>
-  <div class="carousel" id="carousel"></div>
+  <div class="carousel-wrapper">
+    <div class="carousel" id="carousel"></div>
+  </div>
 
   <script>
     const daten = {
@@ -84,32 +95,31 @@
       "03.05.2025": "geöffnet",
       "04.05.2025": "geschlossen",
       "05.05.2025": "geöffnet",
-      "06.05.2025": "geöffnet",
+      "06.05.2025": "geschlossen",
       "07.05.2025": "geschlossen",
-      "08.05.2025": "geöffnet",
+      "08.05.2025": "geschlossen",
       "09.05.2025": "geschlossen",
-      "10.05.2025": "geöffnet",
-      "11.05.2025": "geöffnet",
+      "10.05.2025": "geschlossen",
+      "11.05.2025": "geschlossen",
       "12.05.2025": "geschlossen",
-      "13.05.2025": "geöffnet",
-      "14.05.2025": "geschlossen",
-      "15.05.2025": "geöffnet"
+      "13.05.2025": "geschlossen",
+      "14.05.2025": "geschlossen"
     };
 
     const heute = new Date();
-    const formatter = new Intl.DateTimeFormat('de-DE');
+    const formatter = new Intl.DateTimeFormat("de-DE");
 
     function formatDate(date) {
       return formatter.format(date);
     }
 
-    function createCard(dateStr, status, isFaded = false) {
+    function createCard(dateStr, status, isToday, isFaded = false) {
       const card = document.createElement("div");
       card.className = "card";
       if (isFaded) card.classList.add("faded");
 
       const circle = document.createElement("div");
-      circle.className = `circle ${status === "geöffnet" ? "open" : "closed"}`;
+      circle.className = "circle " + (status === "geöffnet" ? "open" : "closed");
       circle.textContent = status === "geöffnet" ? "✓" : "✕";
 
       const dateLabel = document.createElement("div");
@@ -118,6 +128,14 @@
 
       card.appendChild(circle);
       card.appendChild(dateLabel);
+
+      if (isToday) {
+        const todayNote = document.createElement("div");
+        todayNote.className = "today-label";
+        todayNote.textContent = "(heute)";
+        card.appendChild(todayNote);
+      }
+
       return card;
     }
 
@@ -131,16 +149,16 @@
       const status = daten[formatted] || "geschlossen";
 
       const isToday = i === 0;
-      const isFaded = i < 1 || i > 3; // z. B. nur 3 Hauptkarten sichtbar, Rest blass
-      const card = createCard(formatted, status, isFaded);
+      const isFaded = i < 1 || i > 3;
+      const card = createCard(formatted, status, isToday, isFaded);
       carousel.appendChild(card);
 
       if (isToday) scrollToCardIndex = i;
     }
 
-    // Automatisch auf heutige Karte scrollen
+    // Scroll zum heutigen Datum beim Laden
     window.onload = () => {
-      const cardWidth = document.querySelector(".card").offsetWidth + 24; // inkl. Gap
+      const cardWidth = document.querySelector(".card").offsetWidth + 24;
       carousel.scrollLeft = scrollToCardIndex * cardWidth - window.innerWidth / 2 + cardWidth;
     };
   </script>
