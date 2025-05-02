@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Öffnungszeiten-Ampel (Debug)</title>
+  <title>Öffnungszeiten-Ampel</title>
   <style>
     * { box-sizing: border-box; }
     body {
@@ -78,14 +77,20 @@
       font-size: 10px;
       color: #888;
     }
+
+    #debug {
+      margin-top: 1rem;
+      color: #777;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
-  <h1>Öffnungszeiten-Ampel (Debug)</h1>
+  <h1>Öffnungszeiten-Ampel</h1>
   <div class="carousel-wrapper">
     <div class="carousel" id="carousel"></div>
   </div>
-  <p id="debug" style="color:#999; font-size: 12px; margin-top: 1rem;"></p>
+  <div id="debug"></div>
 
   <script>
     const spreadsheetId = '1YG6NuCkT4u4RUm9zjfNV2JO5oXoLmG7utTbm5Iq7oNA';
@@ -100,8 +105,13 @@
     }
 
     function normalizeDate(str) {
-      const parts = str.split(".");
-      return parts.map(p => parseInt(p)).join(".");
+      try {
+        const [tag, monat, jahr] = str.split(".");
+        const norm = `${parseInt(tag)}.${parseInt(monat)}.${jahr.length === 2 ? '20' + jahr : jahr}`;
+        return norm;
+      } catch (e) {
+        return str;
+      }
     }
 
     function createCard(dateStr, status, isToday, isFaded = false) {
