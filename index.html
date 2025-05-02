@@ -27,7 +27,6 @@
       align-items: center;
       width: 100%;
       max-width: 600px;
-      position: relative;
     }
 
     .arrow {
@@ -137,7 +136,6 @@
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
     const carousel = document.getElementById('carousel');
-    const MAX_DAYS = 14;
 
     function normalizeDate(str) {
       const [day, month, year] = str.split(".").map(Number);
@@ -179,29 +177,33 @@
         const lines = text.trim().split('\n').slice(1);
         const eintraege = lines.map(line => {
           const [datum, status] = line.split('\t');
-          return { datum: datum.trim(), status: status.trim() };
-        });
+          if (!datum || !status) return null;
+          return {
+            datum: datum.trim(),
+            status: status.trim().toLowerCase(),
+            dateObj: normalizeDate(datum.trim())
+          };
+        }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
-        const today = formatDate(new Date());
-        const allData = eintraege
-          .map(e => ({ ...e, dateObj: normalizeDate(e.datum) }))
-          .filter(e => e.dateObj >= new Date())
-          .slice(0, MAX_DAYS);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const formattedToday = formatDate(today);
 
-        let todayIndex = -1;
+        const indexToday = eintraege.findIndex(e =>
+          e.dateObj.toDateString() === today.toDateString()
+        );
+
+        const start = Math.max(0, indexToday - 2);
+        const visibleDays = eintraege.slice(start, start + 5);
         const elements = [];
 
-        allData.forEach((e, i) => {
-          const dateObj = e.dateObj;
+        visibleDays.forEach((e, i) => {
           const div = document.createElement('div');
           div.className = 'day';
-
-          if (i === 0 || i === allData.length - 1) {
-            div.classList.add('dimmed');
-          }
+          if (i === 0 || i === visibleDays.length - 1) div.classList.add('dimmed');
 
           const circle = document.createElement('div');
-          const isOpen = e.status.toLowerCase() === 'geöffnet';
+          const isOpen = e.status === 'geöffnet';
           circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
 
           if (isOpen) {
@@ -211,13 +213,12 @@
           }
 
           const dateText = document.createElement('div');
-          const formatted = formatDate(dateObj);
+          const formatted = formatDate(e.dateObj);
           dateText.className = 'date';
           dateText.textContent = formatted;
 
-          if (formatted === today) {
+          if (formatted === formattedToday) {
             dateText.classList.add('today');
-            todayIndex = i;
           }
 
           div.appendChild(circle);
@@ -225,17 +226,6 @@
           carousel.appendChild(div);
           elements.push(div);
         });
-
-        // Zentriere heute beim Laden
-        if (todayIndex >= 0) {
-          setTimeout(() => {
-            const el = elements[todayIndex];
-            if (el) {
-              const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
-              carousel.scrollTo({ left: offset, behavior: 'smooth' });
-            }
-          }, 100);
-        }
       });
   </script>
 
