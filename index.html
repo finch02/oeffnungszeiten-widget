@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>\u00d6ffnungszeiten-Ampel</title>
+  <title>Öffnungszeiten-Ampel</title>
   <style>
     body {
       margin: 0;
@@ -122,11 +122,11 @@
   </style>
 </head>
 <body>
-  <h1>\u00d6ffnungszeiten-Ampel</h1>
+  <h1>Öffnungszeiten-Ampel</h1>
   <div class="carousel-wrapper">
-    <button class="arrow left" onclick="scrollCarousel(-1)">\u2039</button>
+    <button class="arrow left" onclick="scrollCarousel(-1)">‹</button>
     <div class="carousel" id="carousel"></div>
-    <button class="arrow right" onclick="scrollCarousel(1)">\u203a</button>
+    <button class="arrow right" onclick="scrollCarousel(1)">›</button>
   </div>
 
   <script>
@@ -134,7 +134,7 @@
       const url = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
       const response = await fetch(url);
       const text = await response.text();
-      const zeilen = text.trim().split('\n').slice(1); // Kopfzeile entfernen
+      const zeilen = text.trim().split('\n').slice(1);
       const daten = {};
       zeilen.forEach(zeile => {
         const [datum, status] = zeile.split(',');
@@ -184,8 +184,8 @@
         if (i === 0 || i === sichtbareDaten.length - 1) card.classList.add('dimmed');
 
         const circle = document.createElement('div');
-        circle.className = `circle ${status === 'ge\u00f6ffnet' ? 'open' : 'closed'}`;
-        circle.textContent = status === 'ge\u00f6ffnet' ? '✓' : '✕';
+        circle.className = `circle ${status === 'geöffnet' ? 'open' : 'closed'}`;
+        circle.textContent = status === 'geöffnet' ? '✓' : '✕';
 
         const dateLabel = document.createElement('div');
         dateLabel.className = 'date';
