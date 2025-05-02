@@ -5,182 +5,140 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Öffnungszeiten-Ampel</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: Arial, sans-serif;
-      background: #fafafa;
       margin: 0;
-      padding: 2rem;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
+        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background: #f9f9f9;
+      color: #000;
       text-align: center;
     }
-
     h1 {
-      margin-bottom: 2rem;
+      margin-top: 50px;
     }
-
-    .carousel-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      display: flex;
-      justify-content: center;
-    }
-
     .carousel {
       display: flex;
-      gap: 1.2rem;
-      padding: 1rem 0;
-      scroll-behavior: smooth;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
     }
-
     .card {
-      flex: 0 0 100px;
-      height: 140px;
-      border-radius: 9999px;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-
-    .card.faded {
-      opacity: 0.2;
-      transform: scale(0.92);
-    }
-
-    .circle {
-      width: 64px;
-      height: 64px;
+      flex: 0 0 auto;
+      width: 120px;
+      scroll-snap-align: center;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 32px;
-      font-weight: bold;
-      color: white;
-      margin-bottom: 0.5rem;
+      padding: 20px;
+      text-align: center;
+      background: #f0f0f0;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
     }
-
-    .open {
-      background-color: #f4c721;
+    .card.today {
+      transform: scale(1.2);
     }
-
-    .closed {
-      background-color: #000;
+    .card.faded {
+      opacity: 0.3;
     }
-
-    .date {
-      font-size: 13px;
-      font-weight: bold;
+    .card.open {
+      background: #f4c721;
     }
-
-    .today-label {
-      font-size: 10px;
-      color: #888;
+    .card.closed {
+      background: #000;
+      color: #fff;
+    }
+    .icon {
+      font-size: 2rem;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
   <h1>Öffnungszeiten-Ampel</h1>
-  <div class="carousel-wrapper">
-    <div class="carousel" id="carousel"></div>
-  </div>
-
+  <div class="carousel" id="carousel"></div>
   <script>
-    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
+    const sheetUrl =
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
 
     function formatDate(date) {
-      return date.toLocaleDateString("de-DE");
+      return date.toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+      });
     }
 
-    function normalizeDate(str) {
-      const parts = str.split(".");
-      return parts.map(p => parseInt(p)).join(".");
-    }
+    function createCard(date, status, isToday, isFaded) {
+      const card = document.createElement('div');
+      card.className = 'card ' + (status === 'geöffnet' ? 'open' : 'closed');
+      if (isToday) card.classList.add('today');
+      if (isFaded) card.classList.add('faded');
 
-    function createCard(dateStr, status, isToday, isFaded = false) {
-      const card = document.createElement("div");
-      card.className = "card";
-      if (isFaded) card.classList.add("faded");
+      const icon = document.createElement('div');
+      icon.className = 'icon';
+      icon.textContent = status === 'geöffnet' ? '✔' : '✖';
+      card.appendChild(icon);
 
-      const circle = document.createElement("div");
-      circle.className = "circle " + (status === "geöffnet" ? "open" : "closed");
-      circle.textContent = status === "geöffnet" ? "✓" : "✕";
-
-      const dateLabel = document.createElement("div");
-      dateLabel.className = "date";
-      dateLabel.textContent = dateStr;
-
-      card.appendChild(circle);
-      card.appendChild(dateLabel);
+      const label = document.createElement('div');
+      label.textContent = date;
+      card.appendChild(label);
 
       if (isToday) {
-        const todayNote = document.createElement("div");
-        todayNote.className = "today-label";
-        todayNote.textContent = "(heute)";
-        card.appendChild(todayNote);
+        const hint = document.createElement('div');
+        hint.textContent = '(heute)';
+        hint.style.fontSize = '0.8rem';
+        card.appendChild(hint);
       }
 
       return card;
     }
 
-    function render(einträge) {
-      const carousel = document.getElementById("carousel");
-      const heute = new Date();
-      const todayFormatted = normalizeDate(formatDate(heute));
+    function normalizeDate(str) {
+      const parts = str.split('.');
+      return parts.map((p) => parseInt(p)).join('.');
+    }
 
-      const indexHeute = einträge.findIndex(e => normalizeDate(e.datum) === todayFormatted);
+    function render(einträge) {
+      const carousel = document.getElementById('carousel');
+      const todayFormatted = normalizeDate(formatDate(new Date()));
+      const indexHeute = einträge.findIndex((e) => normalizeDate(e.datum) === todayFormatted);
       if (indexHeute === -1) {
-        carousel.innerHTML = "<p>Kein Datum für heute gefunden.</p>";
+        carousel.innerHTML = '<p>Kein Datum für heute gefunden.</p>';
         return;
       }
 
-      const center = 2;
-      const startIndex = Math.max(0, indexHeute - center);
-      const visible = einträge.slice(startIndex, startIndex + 5);
+      const start = Math.max(0, indexHeute - 2);
+      const end = Math.min(einträge.length, start + 5);
+      const visible = einträge.slice(start, end);
 
-      carousel.innerHTML = "";
-
-      visible.forEach((eintrag, idx) => {
+      visible.forEach((eintrag, i) => {
         const isToday = normalizeDate(eintrag.datum) === todayFormatted;
-        const isFaded = idx !== center;
+        const isFaded = i === 0 || i === visible.length - 1;
         const card = createCard(eintrag.datum, eintrag.status, isToday, isFaded);
         carousel.appendChild(card);
       });
 
-      // Auto-scroll zur Mitte
       setTimeout(() => {
-        const cards = document.querySelectorAll('.card');
-        if (cards[2]) {
-          cards[2].scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-            inline: 'center'
-          });
-        }
-      }, 200);
+        const todayCard = document.querySelector('.card.today');
+        todayCard?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }, 100);
     }
 
-    function parseCSV(csv) {
-      const lines = csv.split("\n").map(l => l.trim()).filter(Boolean);
-      const data = lines.slice(1).map(line => {
-        const [datum, status] = line.split(",");
-        return { datum: datum.trim(), status: status.trim().toLowerCase() };
-      });
-      return data;
-    }
-
-    fetch(SHEET_URL)
-      .then(res => res.text())
-      .then(parseCSV)
-      .then(render)
-      .catch(err => {
-        document.getElementById("carousel").innerHTML = "<p>Fehler beim Laden der Daten.</p>";
-        console.error("Fehler beim Abrufen der Tabelle:", err);
+    fetch(sheetUrl)
+      .then((res) => res.text())
+      .then((text) => {
+        const rows = text.trim().split('\n').slice(1); // remove header
+        const einträge = rows.map((row) => {
+          const [datum, status] = row.split(',');
+          return { datum: datum.trim(), status: status.trim() };
+        });
+        render(einträge);
+      })
+      .catch((err) => {
+        document.getElementById('carousel').innerHTML =
+          '<p>Fehler beim Laden der Daten.</p>';
       });
   </script>
 </body>
