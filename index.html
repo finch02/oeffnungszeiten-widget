@@ -99,9 +99,9 @@
     }
 
     .faded {
-      opacity: 0.4;
-      transform: scale(0.95);
-      filter: grayscale(0.5);
+      opacity: 0.75;
+      filter: grayscale(0.2);
+      transform: scale(0.97);
     }
 
     @media (max-width: 480px) {
@@ -131,57 +131,74 @@
 
   <script>
     const carousel = document.getElementById('carousel');
-    const daysToShow = 14;
+    const MAX_DAYS = 14;
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQIJyC-n5M3OKQbRT7FgdPrhxxDNuZZNebJprFRFlhgTLAUUpk97hTvoct0P5nn2Gye0T2bVd6DUfN8/pub?output=csv';
 
-    // Beispiel-Daten (true = offen, false = geschlossen)
-    const openings = Array.from({ length: daysToShow }, () => Math.random() > 0.5);
-
-    const today = new Date();
-    const todayStr = today.toDateString();
-    let todayIndex = 0;
-    const dayElements = [];
-
-    for (let i = 0; i < daysToShow; i++) {
-      const date = new Date();
-      date.setDate(today.getDate() + i);
-      const dateStr = date.toDateString();
-
-      const isToday = dateStr === todayStr;
-      if (isToday) todayIndex = i;
-
-      const isOpen = openings[i];
-
-      const div = document.createElement('div');
-      div.className = 'day';
-      if (i === 0 || i === daysToShow - 1) {
-        div.classList.add('faded');
-      }
-
-      const circle = document.createElement('div');
-      circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
-      circle.innerHTML = isOpen ? '✓' : '✕';
-
-      const dateText = document.createElement('div');
-      dateText.className = 'date' + (isToday ? ' today' : '');
-      dateText.textContent = date.toLocaleDateString('de-DE');
-
-      div.appendChild(circle);
-      div.appendChild(dateText);
-      dayElements.push(div);
-      carousel.appendChild(div);
+    function parseGermanDate(str) {
+      const [day, month, year] = str.split('.');
+      return new Date(`20${year}-${month}-${day}`);
     }
 
-    // Auto-Scroll auf heute
-    window.addEventListener('load', () => {
-      const el = dayElements[todayIndex];
-      if (el) {
-        const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
-        carousel.scrollTo({ left: offset, behavior: 'smooth' });
-      }
-    });
+    fetch(csvUrl)
+      .then(response => response.text())
+      .then(csvText => {
+        const rows = csvText.trim().split('\n');
+        const data = rows.slice(1).map(row => {
+          const [datum, status] = row.split(',');
+          return {
+            datum: datum.trim(),
+            status: status.trim().toLowerCase()
+          };
+        });
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dayElements = [];
+        let todayIndex = -1;
+
+        // Filtere nur zukünftige Tage
+        const futureData = data
+          .map(entry => ({ ...entry, dateObj: parseGermanDate(entry.datum) }))
+          .filter(entry => entry.dateObj >= today)
+          .slice(0, MAX_DAYS);
+
+        futureData.forEach((entry, i) => {
+          const isToday = entry.dateObj.toDateString() === today.toDateString();
+          if (isToday) todayIndex = i;
+
+          const div = document.createElement('div');
+          div.className = 'day';
+          if (i === 0 || i === futureData.length - 1) {
+            div.classList.add('faded');
+          }
+
+          const circle = document.createElement('div');
+          circle.className = 'circle ' + (entry.status === 'geöffnet' ? 'open' : 'closed');
+          circle.innerHTML = entry.status === 'geöffnet' ? '✓' : '✕';
+
+          const dateText = document.createElement('div');
+          dateText.className = 'date' + (isToday ? ' today' : '');
+          dateText.textContent = entry.datum;
+
+          div.appendChild(circle);
+          div.appendChild(dateText);
+          dayElements.push(div);
+          carousel.appendChild(div);
+        });
+
+        // Auto-scroll zu heute
+        window.addEventListener('load', () => {
+          if (todayIndex >= 0) {
+            const el = dayElements[todayIndex];
+            const offset = el.offsetLeft - carousel.offsetWidth / 2 + el.offsetWidth / 2;
+            carousel.scrollTo({ left: offset, behavior: 'smooth' });
+          }
+        });
+      })
+      .catch(error => console.error('Fehler beim Laden der CSV-Daten:', error));
 
     function scrollCarousel(direction) {
-      const scrollAmount = dayElements[0].offsetWidth + 16; // Breite + Gap
+      const scrollAmount = 106; // 90px + 16px gap
       carousel.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
     }
   </script>
