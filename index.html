@@ -21,18 +21,16 @@
   <div class="status" id="status">wird geladen...</div>
 
   <script>
-    // Simulierte Öffnungszeiten-Daten
     const daten = {
       "02.05.2025": "geöffnet",
       "03.05.2025": "geschlossen"
     };
 
     const heute = new Date();
-    const tag = heute.toLocaleDateString("de-DE").split(".").join(".");
-    console.log("Erkannter Tag:", tag); // Debug-Ausgabe
+    const tag = `${heute.getDate().toString().padStart(2, "0")}.${(heute.getMonth()+1).toString().padStart(2, "0")}.${heute.getFullYear()}`;
+    console.log("Tag erkannt:", tag);
 
     const status = daten[tag] || "Keine Daten";
-
     document.getElementById("status").textContent = status;
     document.getElementById("status").style.color = status === "geöffnet" ? "green" : "red";
   </script>
