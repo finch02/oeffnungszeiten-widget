@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Öffnungszeiten-Ampel</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
-
+    * { box-sizing: border-box; }
     body {
       font-family: Arial, sans-serif;
       background: #fafafa;
@@ -16,24 +13,18 @@
       padding: 2rem;
       text-align: center;
     }
-
-    h1 {
-      margin-bottom: 2rem;
-    }
-
+    h1 { margin-bottom: 2rem; }
     .carousel-wrapper {
       width: 100%;
       overflow: hidden;
       display: flex;
       justify-content: center;
     }
-
     .carousel {
       display: flex;
       gap: 1.2rem;
       transition: transform 0.3s ease;
     }
-
     .card {
       flex: 0 0 100px;
       height: 140px;
@@ -46,12 +37,10 @@
       justify-content: center;
       transition: transform 0.3s ease, opacity 0.3s ease;
     }
-
     .card.faded {
       opacity: 0.2;
       transform: scale(0.92);
     }
-
     .circle {
       width: 48px;
       height: 48px;
@@ -64,20 +53,18 @@
       color: white;
       margin-bottom: 0.5rem;
     }
-
     .open {
       background-color: #f4c721;
+      color: black;
     }
-
     .closed {
       background-color: #000;
+      color: white;
     }
-
     .date {
       font-size: 13px;
       font-weight: bold;
     }
-
     .today-label {
       font-size: 10px;
       color: #888;
@@ -91,22 +78,9 @@
   </div>
 
   <script>
-    const daten = {
-      "01.05.2025": "geschlossen",
-      "02.05.2025": "geöffnet",
-      "03.05.2025": "geöffnet",
-      "04.05.2025": "geschlossen",
-      "05.05.2025": "geöffnet",
-      "06.05.2025": "geschlossen",
-      "07.05.2025": "geöffnet",
-      "08.05.2025": "geschlossen",
-      "09.05.2025": "geöffnet",
-      "10.05.2025": "geschlossen",
-      "11.05.2025": "geöffnet",
-      "12.05.2025": "geschlossen",
-      "13.05.2025": "geöffnet",
-      "14.05.2025": "geschlossen"
-    };
+    const spreadsheetId = '2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv';
+    const apiKey = 'AIzaSyDiUmlBqV778uK3fpKOklP0k4Zy7RLGaXg';
+    const sheetName = 'Tabellenblatt1';
 
     const heute = new Date();
     const formatter = new Intl.DateTimeFormat("de-DE");
@@ -121,8 +95,8 @@
       if (isFaded) card.classList.add("faded");
 
       const circle = document.createElement("div");
-      circle.className = "circle " + (status === "geöffnet" ? "open" : "closed");
-      circle.textContent = status === "geöffnet" ? "✓" : "✕";
+      circle.className = "circle " + (status.toLowerCase() === "geöffnet" ? "open" : "closed");
+      circle.textContent = status.toLowerCase() === "geöffnet" ? "✓" : "✕";
 
       const dateLabel = document.createElement("div");
       dateLabel.className = "date";
@@ -141,33 +115,46 @@
       return card;
     }
 
-    const carousel = document.getElementById("carousel");
+    async function fetchData() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        const rows = json.values;
+        const header = rows[0];
+        const dateIdx = header.findIndex(h => h.toLowerCase().includes("tag"));
+        const statusIdx = header.findIndex(h => h.toLowerCase().includes("status"));
 
-    const daysToShow = 5; // nur 5 anzeigen
-    const totalDays = 14;
-    const center = Math.floor(daysToShow / 2);
-    const allDates = [];
+        const einträge = rows.slice(1).map(row => ({
+          datum: row[dateIdx],
+          status: row[statusIdx]
+        }));
 
-    for (let i = 0; i < totalDays; i++) {
-      const datum = new Date();
-      datum.setDate(heute.getDate() + i);
-      const formatted = formatDate(datum);
-      allDates.push(formatted);
+        render(einträge);
+      } catch (err) {
+        console.error("Fehler beim Abrufen der Daten:", err);
+      }
     }
 
-    const todayFormatted = formatDate(heute);
-    const todayIndex = allDates.indexOf(todayFormatted);
+    function render(einträge) {
+      const carousel = document.getElementById("carousel");
 
-    const startIndex = Math.max(0, todayIndex - center);
-    const visibleDates = allDates.slice(startIndex, startIndex + daysToShow);
+      const todayFormatted = formatDate(new Date());
 
-    visibleDates.forEach((date, idx) => {
-      const status = daten[date] || "geschlossen";
-      const isToday = date === todayFormatted;
-      const isFaded = idx !== center;
-      const card = createCard(date, status, isToday, isFaded);
-      carousel.appendChild(card);
-    });
+      const indexHeute = einträge.findIndex(e => e.datum === todayFormatted);
+      const center = 2;
+      const startIndex = Math.max(0, indexHeute - center);
+      const visible = einträge.slice(startIndex, startIndex + 5);
+
+      visible.forEach((eintrag, idx) => {
+        const isToday = eintrag.datum === todayFormatted;
+        const isFaded = !isToday;
+        const card = createCard(eintrag.datum, eintrag.status, isToday, isFaded);
+        carousel.appendChild(card);
+      });
+    }
+
+    fetchData();
   </script>
 </body>
 </html>
