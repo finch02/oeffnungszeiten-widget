@@ -101,14 +101,25 @@
       transform: scale(0.95);
     }
 
+    .icon {
+      width: 28px;
+      height: 28px;
+    }
+
     @media (max-width: 480px) {
       .carousel {
         gap: 10px;
       }
+
       .circle {
         width: 60px;
         height: 60px;
         font-size: 1.5rem;
+      }
+
+      .icon {
+        width: 24px;
+        height: 24px;
       }
     }
   </style>
@@ -146,6 +157,22 @@
       carousel.scrollBy({ left: scrollAmount * direction, behavior: 'smooth' });
     }
 
+    function createCheckmarkSVG() {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "white");
+      svg.setAttribute("stroke-width", "3");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      svg.classList.add("icon");
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      path.setAttribute("points", "20 6 9 17 4 12");
+      svg.appendChild(path);
+      return svg;
+    }
+
     fetch(sheetURL)
       .then((response) => response.text())
       .then((text) => {
@@ -174,8 +201,14 @@
           }
 
           const circle = document.createElement('div');
-          circle.className = 'circle ' + (e.status.toLowerCase() === 'geöffnet' ? 'open' : 'closed');
-          circle.textContent = e.status.toLowerCase() === 'geöffnet' ? '✓' : '✕';
+          const isOpen = e.status.toLowerCase() === 'geöffnet';
+          circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
+
+          if (isOpen) {
+            circle.appendChild(createCheckmarkSVG());
+          } else {
+            circle.textContent = '✕';
+          }
 
           const dateText = document.createElement('div');
           const formatted = formatDate(dateObj);
@@ -193,7 +226,7 @@
           elements.push(div);
         });
 
-        // Zentriere „heute“ beim Laden
+        // Zentriere heute beim Laden
         if (todayIndex >= 0) {
           setTimeout(() => {
             const el = elements[todayIndex];
