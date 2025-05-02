@@ -20,37 +20,30 @@
     }
 
     .carousel-wrapper {
-      position: relative;
       width: 100%;
-      max-width: 900px;
-      overflow: hidden;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .carousel {
       display: flex;
       gap: 20px;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      padding: 20px 20px;
+      justify-content: center;
+      padding: 20px;
+      scroll-snap-type: x mandatory;
     }
 
     .card {
       flex: 0 0 auto;
-      width: 120px;
-      height: 160px;
-      background: white;
+      width: 100px;
+      height: 140px;
       border-radius: 16px;
-      box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: transform 0.3s ease;
-    }
-
-    .card.faded {
-      opacity: 0.4;
-      transform: scale(0.95);
+      background: none;
+      scroll-snap-align: center;
     }
 
     .circle {
@@ -62,7 +55,6 @@
       justify-content: center;
       font-size: 28px;
       color: white;
-      border: none;
     }
 
     .open {
@@ -73,146 +65,69 @@
       background-color: black;
     }
 
+    .dimmed {
+      opacity: 0.3;
+    }
+
     .date {
-      margin-top: 12px;
+      margin-top: 8px;
       font-weight: bold;
-      font-size: 0.9em;
-    }
-
-    .heute {
-      font-size: 0.7em;
-      color: #555;
-      margin-top: 4px;
-    }
-
-    .arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      font-size: 28px;
-      color: #aaa;
-      cursor: pointer;
-      z-index: 1;
-    }
-
-    .arrow:hover {
-      color: #555;
-    }
-
-    .arrow.left {
-      left: 0;
-    }
-
-    .arrow.right {
-      right: 0;
-    }
-
-    @media (max-width: 500px) {
-      .card {
-        width: 90px;
-        height: 130px;
-      }
-
-      .circle {
-        width: 50px;
-        height: 50px;
-        font-size: 22px;
-      }
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <h1>Öffnungszeiten-Ampel</h1>
   <div class="carousel-wrapper">
-    <button class="arrow left" onclick="scrollCarousel(-1)">‹</button>
     <div class="carousel" id="carousel"></div>
-    <button class="arrow right" onclick="scrollCarousel(1)">›</button>
   </div>
 
   <script>
-    async function fetchData() {
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=csv';
-      const response = await fetch(sheetUrl);
-      const text = await response.text();
-      const rows = text.trim().split('\n').slice(1); // remove header
-      const data = rows.map(row => {
-        const [datum, status] = row.split(',');
-        return { datum: datum.trim(), status: status.trim() };
-      });
-      return data;
-    }
+    const sheetUrl = 'https://opensheet.elk.sh/1GFjeYv6P9MfY3WfyzNKME0RoA5_zRjy1AVF6Cny6f8E/tabelle1';
 
-    function formatDate(dateStr) {
-      const parts = dateStr.split('.');
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
+    fetch(sheetUrl)
+      .then(res => res.json())
+      .then(data => {
+        const today = new Date();
+        const todayStr = formatDate(today);
+        const indexHeute = data.findIndex(e => e.datum === todayStr);
 
-    function isToday(dateStr) {
-      const today = new Date();
-      const d = new Date(formatDate(dateStr));
-      return today.toDateString() === d.toDateString();
-    }
+        if (indexHeute === -1) return;
 
-    function createCard(entry, faded = false) {
-      const card = document.createElement('div');
-      card.className = 'card';
-      if (faded) card.classList.add('faded');
+        const carousel = document.getElementById('carousel');
+        carousel.innerHTML = '';
 
-      const circle = document.createElement('div');
-      circle.className = `circle ${entry.status === 'geöffnet' ? 'open' : 'closed'}`;
-      circle.textContent = entry.status === 'geöffnet' ? '✓' : '✕';
+        const visible = data.slice(indexHeute - 2, indexHeute + 3);
 
-      const dateText = document.createElement('div');
-      dateText.className = 'date';
-      dateText.textContent = entry.datum;
+        visible.forEach((e, i) => {
+          const card = document.createElement('div');
+          card.className = 'card';
 
-      card.appendChild(circle);
-      card.appendChild(dateText);
+          const circle = document.createElement('div');
+          circle.className = `circle ${e.status === 'geöffnet' ? 'open' : 'closed'}`;
+          circle.textContent = e.status === 'geöffnet' ? '✓' : '✕';
 
-      if (isToday(entry.datum)) {
-        const heuteText = document.createElement('div');
-        heuteText.className = 'heute';
-        heuteText.textContent = '(heute)';
-        card.appendChild(heuteText);
-      }
+          const label = document.createElement('div');
+          label.className = 'date';
+          label.innerHTML = `
+            ${e.datum === todayStr ? '<strong>' + e.datum + '<br><small>(heute)</small></strong>' : e.datum}
+          `;
 
-      return card;
-    }
+          if (i === 0 || i === 4) {
+            card.classList.add('dimmed');
+          }
 
-    function scrollCarousel(direction) {
-      const scrollAmount = 140;
-      document.getElementById('carousel').scrollBy({
-        left: scrollAmount * direction,
-        behavior: 'smooth'
-      });
-    }
-
-    async function init() {
-      const eintraege = await fetchData();
-      const carousel = document.getElementById('carousel');
-
-      const todayIndex = eintraege.findIndex(e => isToday(e.datum));
-      const startIndex = Math.max(0, todayIndex - 2);
-      const endIndex = startIndex + 5;
-
-      eintraege.slice(startIndex, endIndex).forEach((e, i) => {
-        const faded = i === 0 || i === 4;
-        const card = createCard(e, faded);
-        carousel.appendChild(card);
-      });
-
-      setTimeout(() => {
-        const cardWidth = document.querySelector('.card')?.offsetWidth || 120;
-        carousel.scrollTo({
-          left: (cardWidth + 20) * (todayIndex - 2),
-          behavior: 'smooth'
+          card.appendChild(circle);
+          card.appendChild(label);
+          carousel.appendChild(card);
         });
-      }, 100);
-    }
+      });
 
-    init();
+    function formatDate(date) {
+      return date.toLocaleDateString('de-DE', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+    }
   </script>
 </body>
 </html>
