@@ -172,20 +172,25 @@
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const formattedToday = formatDate(today);
 
-        const upcoming = entries
-          .filter(e => e.dateObj >= today)
-          .slice(0, 14);
+        // 2 Tage zurück + heute + 14 Tage voraus
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 2);
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 14);
 
-        let todayIndex = upcoming.findIndex(e =>
+        const fullRange = entries
+          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
+          .sort((a, b) => a.dateObj - b.dateObj);
+
+        const todayIndex = fullRange.findIndex(e =>
           e.dateObj.toDateString() === today.toDateString()
         );
 
-        upcoming.forEach((e, i) => {
+        fullRange.forEach((e, i) => {
           const div = document.createElement('div');
           div.className = 'day';
-          if (i === 0 || i === upcoming.length - 1) div.classList.add('dimmed');
+          if (i === 0 || i === fullRange.length - 1) div.classList.add('dimmed');
 
           const circle = document.createElement('div');
           const isOpen = e.status === 'geöffnet';
@@ -202,7 +207,7 @@
           dateText.className = 'date';
           dateText.textContent = formatted;
 
-          if (formatted === formattedToday) {
+          if (e.dateObj.toDateString() === today.toDateString()) {
             dateText.classList.add('today');
           }
 
@@ -211,9 +216,9 @@
           carousel.appendChild(div);
         });
 
-        // 💡 Scroll „heute“ in die Mitte → Index - 2 = zentrierte Position
+        // Heute mittig anzeigen (3. von 5 sichtbar)
         setTimeout(() => {
-          if (todayIndex >= 0 && carousel.children.length > todayIndex) {
+          if (todayIndex >= 0 && carousel.children.length > todayIndex - 2) {
             const targetEl = carousel.children[todayIndex - 2] || carousel.children[0];
             const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
             carousel.scrollTo({ left: offset, behavior: 'smooth' });
