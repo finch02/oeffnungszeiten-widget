@@ -1,123 +1,117 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Status-Ampel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Öffnungszeiten-Ampel</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #fff;
+      text-align: center;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    .ampel-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      overflow-x: hidden;
-    }
-
-    .carousel-container {
-      display: flex;
-      align-items: center;
       gap: 20px;
+      overflow-x: auto;
+      padding: 20px;
+      position: relative;
     }
-
-    .arrow {
-      font-size: 2rem;
-      cursor: pointer;
-      color: #111;
-      opacity: 0.6;
-      user-select: none;
+    .ampel {
+      flex: 0 0 100px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
-
-    .status-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 80px;
-      transition: transform 0.3s ease;
-    }
-
     .circle {
       width: 60px;
       height: 60px;
       border-radius: 50%;
+      margin: 0 auto 10px;
       display: flex;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
+      font-size: 26px;
       font-weight: bold;
       color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    .yellow {
-      background: #ffd600;
+    .open {
+      background-color: yellow;
+      color: white;
     }
-
-    .black {
-      background: #111;
+    .closed {
+      background-color: black;
+      color: white;
     }
-
-    .faded {
-      background: #ddd;
-      color: transparent;
+    .date-label {
+      font-size: 12px;
+      color: #555;
     }
-
-    .date {
-      margin-top: 10px;
-      font-size: 0.8rem;
-      color: #333;
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 32px;
+      color: #ccc;
+      z-index: 1;
+      user-select: none;
     }
-
-    .label {
-      font-size: 0.9rem;
-      margin-top: 6px;
-      font-weight: bold;
+    .arrow.left {
+      left: 5px;
     }
-
-    .hidden {
-      opacity: 0.3;
-      transform: scale(0.9);
+    .arrow.right {
+      right: 5px;
     }
   </style>
 </head>
 <body>
-  <div class="carousel-container">
-    <div class="arrow" onclick="scrollLeft()">‹</div>
-
-    <div class="status-box hidden">
-      <div class="circle faded">-</div>
-      <div class="date">24.04.2024</div>
-    </div>
-
-    <div class="status-box">
-      <div class="circle black">CLOSED</div>
-      <div class="date">25.04.2024</div>
-    </div>
-
-    <div class="status-box">
-      <div class="circle yellow">OPEN</div>
-      <div class="date">26.04.2024</div>
-    </div>
-
-    <div class="status-box">
-      <div class="circle yellow">OPEN</div>
-      <div class="date">27.04.2024</div>
-    </div>
-
-    <div class="status-box hidden">
-      <div class="circle faded">-</div>
-      <div class="date">28.04.2024</div>
-    </div>
-
-    <div class="arrow" onclick="scrollRight()">›</div>
-  </div>
+  <h1>Öffnungszeiten-Ampel</h1>
+  <div class="arrow left">‹</div>
+  <div class="ampel-container" id="ampelContainer"></div>
+  <div class="arrow right">›</div>
 
   <script>
-    function scrollLeft() {
-      // Optional Scrollfunktion
-    }
-    function scrollRight() {
-      // Optional Scrollfunktion
-    }
+    const sheetId = "2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv";
+    const sheetURL = `https://docs.google.com/spreadsheets/d/e/${sheetId}/pub?gid=0&single=true&output=csv`;
+    const proxyURL = `https://api.allorigins.win/raw?url=${encodeURIComponent(sheetURL)}`;
+
+    fetch(proxyURL)
+      .then(response => response.text())
+      .then(csv => {
+        const rows = csv.split("\n").slice(1); // skip header
+        const data = rows.map(row => {
+          const [date, status] = row.split(",");
+          return { date: date.trim(), status: status.trim().toLowerCase() };
+        });
+
+        const today = new Date();
+        const todayIndex = data.findIndex(entry => entry.date === today.toLocaleDateString("de-DE"));
+        const start = Math.max(0, todayIndex - 1);
+        const displayDays = data.slice(start, start + 3);
+
+        const container = document.getElementById("ampelContainer");
+        displayDays.forEach(entry => {
+          const isOpen = entry.status === "geöffnet";
+          const symbol = isOpen ? "✓" : "✕";
+          const div = document.createElement("div");
+          div.className = "ampel";
+          div.innerHTML = `
+            <div class="circle ${isOpen ? 'open' : 'closed'}">${symbol}</div>
+            <div class="date-label">${entry.date}</div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        document.getElementById("ampelContainer").innerHTML = "Fehler beim Laden der Daten.";
+        console.error(err);
+      });
   </script>
 </body>
 </html>
