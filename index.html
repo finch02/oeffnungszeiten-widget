@@ -2,55 +2,106 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Öffnungszeiten</title>
+  <title>Öffnungszeiten-Ampel</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
+      margin: 20px;
+      background: #f8f8f8;
       text-align: center;
-      margin-top: 50px;
     }
-    .status {
-      font-size: 2rem;
+    .ampel-container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 40px;
+    }
+    .punkt {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 1;
+    }
+    .punkt.vergessen {
+      opacity: 0.4;
+    }
+    .kreis {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 14px;
+    }
+    .datum {
+      margin-top: 8px;
+      font-size: 12px;
     }
   </style>
 </head>
 <body>
-  <h1>Heute ist der Status:</h1>
-  <div id="status" class="status">wird geladen...</div>
+  <h1>Öffnungszeiten-Ampel</h1>
+  <div class="ampel-container" id="ampel"></div>
 
   <script>
     const sheetId = "1_-KJFMmaI7YNRvXh84RmB7Fz29mW4a6lFA7d_aVyFqaU";
     const sheetName = "Tabelle1";
     const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${sheetName}`;
 
-    const heute = new Date().toLocaleDateString("de-DE");
+    function formatDate(date) {
+      const d = new Date(date);
+      return d.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    }
 
     fetch(url)
       .then(res => res.text())
       .then(data => {
         const json = JSON.parse(data.substr(47).slice(0, -2));
         const rows = json.table.rows;
-
-        let status = "Keine Daten";
-
+        const statusMap = {};
         for (let row of rows) {
-          const datum = row.c[0]?.v;
-          const wert = row.c[1]?.v;
-
-          if (datum === heute) {
-            status = wert;
-            break;
+          const date = row.c[0]?.v;
+          const status = row.c[1]?.v;
+          if (date && status) {
+            statusMap[date] = status;
           }
         }
 
-        const statusEl = document.getElementById("status");
-        statusEl.textContent = status;
-        statusEl.style.color = status === "geöffnet" ? "green" : "red";
+        const container = document.getElementById("ampel");
+        const heute = new Date();
+
+        for (let offset = -1; offset <= 1; offset++) {
+          const d = new Date(heute);
+          d.setDate(d.getDate() + offset);
+          const datum = formatDate(d);
+          const status = statusMap[datum] || "unbekannt";
+
+          const punkt = document.createElement("div");
+          punkt.className = "punkt" + (offset === -1 ? " vergessen" : "");
+
+          const farbe = status.toLowerCase() === "geöffnet" ? "gold" :
+                        status.toLowerCase() === "geschlossen" ? "black" : "gray";
+          const text = status.toLowerCase() === "geöffnet" ? "open" :
+                       status.toLowerCase() === "geschlossen" ? "closed" : "?";
+
+          punkt.innerHTML = `
+            <div class="kreis" style="background:${farbe}">${text}</div>
+            <div class="datum">${datum.slice(0, 5)}${offset === 0 ? " (heute)" : ""}</div>
+          `;
+
+          container.appendChild(punkt);
+        }
       })
-      .catch(error => {
-        console.error("Fehler beim Laden der Tabelle:", error);
-        document.getElementById("status").textContent = "Fehler beim Laden";
+      .catch(err => {
+        console.error("Fehler beim Laden:", err);
+        document.getElementById("ampel").innerHTML = "<p>Fehler beim Laden der Daten.</p>";
       });
   </script>
 </body>
