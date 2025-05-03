@@ -4,131 +4,91 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Öffnungszeiten-Ampel</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap"
+        rel="stylesheet">
   <style>
-    /* --- Seite scrollt normal vertikal --- */
+    /* Seite scrollt ganz normal vertikal */
     html, body {
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: #fff;
-      color: #000;
+      margin: 0; padding: 0;
+      font-family: 'Inter',sans-serif;
+      background: #fff; color: #000;
       overflow-x: hidden;
       overflow-y: auto;
     }
     body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem 1rem 2rem;
+      padding: 1rem;
+      display: flex; flex-direction: column; align-items: center;
     }
 
-    /* --- Widget: kein vertikales Overscroll, nur horizontal --- */
+    /* Widget-Wrapper: blockiert alle vertikalen Gesten, nur horizontales Panning */
     .carousel-wrapper {
       position: relative;
-      width: 100%;
-      max-width: 600px;
-      overflow: hidden;
-      margin-bottom: 2rem;
-      /* blockiert alle vertikalen Scroll-Gesten im Widget */
+      width: 100%; max-width: 600px;
+      overflow: hidden; margin-bottom: 2rem;
       overscroll-behavior: contain;
-      /* nur horizontales Panning erlauben */
       touch-action: pan-x;
     }
 
     .carousel {
       display: flex;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-behavior: smooth;
+      overflow-x: auto; overflow-y: hidden;
       scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
-      flex: 1;
-      justify-content: center;
+      gap: 0.5rem;
     }
 
     .day {
-      flex: 0 0 20%;               /* 5 Slots nebeneinander */
-      scroll-snap-align: center;
+      flex: 0 0 20%;
       text-align: center;
-      transition: opacity 0.3s, transform 0.3s;
+      scroll-snap-align: center;
+      transition: opacity .3s, transform .3s;
     }
 
     .circle {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      margin: 0 auto 0.4rem;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      transition: box-shadow 0.3s;
+      width: 72px; height: 72px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; margin: 0 auto .4rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+      transition: box-shadow .3s;
     }
-    .open   { background-color: #f4c721; color: #fff; }
-    .closed { background-color: #000;    color: #fff; }
-
+    .open   { background: #f4c721; color: #fff; }
+    .closed { background: #000;    color: #fff; }
     .highlight-today .circle {
       border: 4px solid #c59b00;
-      box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
+      box-shadow: inset 0 0 4px rgba(0,0,0,.2);
     }
 
     .date {
-      font-family: 'Inter', sans-serif !important;
-      font-weight: bold;
-      font-size: 0.9rem;
+      font-family: 'Inter',sans-serif !important;
+      font-weight: bold; font-size: .9rem;
     }
-
-    .dimmed {
-      opacity: 0.35;
-      transform: scale(0.92);
-    }
-
-    .icon {
-      width: 28px;
-      height: 28px;
-    }
+    .dimmed { opacity:.35; transform:scale(.92); }
+    .icon   { width:28px; height:28px; }
 
     .arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 2rem;
-      background: rgba(255,255,255,0.9);
-      border-radius: 50%;
-      padding: 0.3em 0.5em;
-      cursor: pointer;
-      user-select: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      z-index: 2;
+      position:absolute; top:50%; transform:translateY(-50%);
+      font-size:2rem; background:rgba(255,255,255,.9);
+      border-radius:50%; padding:.3em .5em;
+      cursor:pointer; user-select:none;
+      opacity:0; transition:.3s; pointer-events:none; z-index:2;
     }
-    .arrow-visible { opacity: 1; pointer-events: auto; }
-    .arrow-left  { left: -20px; }
-    .arrow-right { right: -20px; }
+    .arrow-visible { opacity:1; pointer-events:auto; }
+    .arrow-left  { left:0; }
+    .arrow-right { right:0; }
 
-    @media (max-width: 480px) {
-      .circle {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-      }
-      .icon {
-        width: 24px;
-        height: 24px;
-      }
-      .day {
-        flex: 0 0 20%;
-      }
-      .arrow-left  { left: -10px; }
-      .arrow-right { right: -10px; }
+    @media(max-width:480px){
+      .circle { width:60px; height:60px; font-size:1.5rem; }
+      .icon   { width:24px; height:24px; }
+      .day    { flex:0 0 20vw; } /* 5 Slots auf 100vw */
+      .arrow-left  { left:0; }
+      .arrow-right { right:0; }
     }
   </style>
 </head>
 <body>
+
   <div class="carousel-wrapper">
     <div class="arrow arrow-left"  id="leftArrow">&#8249;</div>
     <div class="carousel"         id="carousel"></div>
@@ -136,81 +96,90 @@
   </div>
 
   <script>
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/.../pub?output=tsv';
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/…/pub?output=tsv';
     const carousel   = document.getElementById('carousel');
     const leftArrow  = document.getElementById('leftArrow');
     const rightArrow = document.getElementById('rightArrow');
 
-    function normalizeDate(str) {
-      const [d,m,y] = str.split('.').map(Number);
+    function normalizeDate(s) {
+      const [d,m,y] = s.split('.').map(Number);
       return new Date(y<100?2000+y:y, m-1, d);
     }
-    function formatDate(d) {
-      return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
+    function formatDate(dt) {
+      return dt.toLocaleDateString('de-DE', {
+        day:'2-digit', month:'2-digit', year:'2-digit'
+      });
     }
-    function createCheckmarkSVG(){
+    function createCheckmarkSVG() {
       const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('viewBox','0 0 24 24');
-      svg.setAttribute('fill','none'); svg.setAttribute('stroke','white');
-      svg.setAttribute('stroke-width','3'); svg.setAttribute('stroke-linecap','round');
-      svg.setAttribute('stroke-linejoin','round'); svg.classList.add('icon');
+      svg.setAttribute('viewBox','0 0 24 24'); svg.setAttribute('fill','none');
+      svg.setAttribute('stroke','white'); svg.setAttribute('stroke-width','3');
+      svg.setAttribute('stroke-linecap','round'); svg.setAttribute('stroke-linejoin','round');
+      svg.classList.add('icon');
       const p = document.createElementNS('http://www.w3.org/2000/svg','polyline');
       p.setAttribute('points','20 6 9 17 4 12'); svg.appendChild(p);
       return svg;
     }
-    function updateArrows(){
+    function updateArrows() {
       const sc=carousel.scrollLeft, max=carousel.scrollWidth-carousel.clientWidth;
-      leftArrow.classList.toggle('arrow-visible',  sc>1);
+      leftArrow.classList.toggle('arrow-visible', sc>1);
       rightArrow.classList.toggle('arrow-visible', sc<max-1);
     }
-    function updateDimmed(){
+    function updateDimmed() {
       const days=[...carousel.children], r=carousel.getBoundingClientRect();
-      const visible=days.filter(el=>{
+      const vis = days.filter(el=>{
         const b=el.getBoundingClientRect();
-        return b.right>r.left+8&&b.left<r.right-8;
+        return b.right>r.left+8 && b.left<r.right-8;
       });
       days.forEach(el=>el.classList.remove('dimmed'));
-      if(visible.length>=3){
-        visible[0].classList.add('dimmed');
-        visible[visible.length-1].classList.add('dimmed');
+      if(vis.length>=3) {
+        vis[0].classList.add('dimmed');
+        vis[vis.length-1].classList.add('dimmed');
       }
     }
 
-    fetch(sheetURL).then(r=>r.text()).then(txt=>{
-      const lines=txt.trim().split('\n').slice(1);
-      const entries=lines.map(l=>{
-        const [dt,st]=l.split('\t');
-        if(!dt||!st)return null;
-        return { dateObj:normalizeDate(dt.trim()), open: st.trim().toLowerCase()==='geöffnet' };
-      }).filter(e=>e&&e.dateObj);
-      const today=new Date(); today.setHours(0,0,0,0);
-      const start=new Date(today); start.setDate(start.getDate()-2);
-      const end=new Date(today); end.setDate(end.getDate()+14);
-      const range=entries.filter(e=>e.dateObj>=start&&e.dateObj<=end)
-                         .sort((a,b)=>a.dateObj-b.dateObj);
-      const idx=range.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
+    fetch(sheetURL)
+      .then(r=>r.text())
+      .then(txt=>{
+        const rows = txt.trim().split('\n').slice(1);
+        const entries = rows.map(l=>{
+          const [dt,st]=l.split('\t');
+          if(!dt||!st) return null;
+          return { date:normalizeDate(dt.trim()), open: st.trim().toLowerCase()==='geöffnet' };
+        }).filter(e=>e&&e.date instanceof Date);
 
-      range.forEach(e=>{
-        const day=document.createElement('div'); day.className='day';
-        const circ=document.createElement('div'); circ.className='circle '+(e.open?'open':'closed');
-        if(e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent='✕';
-        const dtEl=document.createElement('div'); dtEl.className='date'; dtEl.textContent=formatDate(e.dateObj);
-        day.append(circ,dtEl);
-        if(e.dateObj.toDateString()===today.toDateString()) day.classList.add('highlight-today');
-        carousel.appendChild(day);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const start = new Date(today); start.setDate(start.getDate()-2);
+        const end   = new Date(today); end.setDate(end.getDate()+14);
+
+        const range = entries
+          .filter(e=>e.date>=start&&e.date<=end)
+          .sort((a,b)=>a.date-b.date);
+        const idx = range.findIndex(e=>e.date.toDateString()===today.toDateString());
+
+        range.forEach(e=>{
+          const dayE = document.createElement('div'); dayE.className='day';
+          const cir  = document.createElement('div'); cir.className='circle '+(e.open?'open':'closed');
+          if(e.open) cir.appendChild(createCheckmarkSVG()); else cir.textContent='✕';
+          const dEl  = document.createElement('div'); dEl.className='date'; dEl.textContent=formatDate(e.date);
+          dayE.append(cir,dEl);
+          if(e.date.toDateString()===today.toDateString()) dayE.classList.add('highlight-today');
+          carousel.appendChild(dayE);
+        });
+
+        setTimeout(()=>{
+          const c = Math.max(2,Math.min(idx,carousel.children.length-3));
+          const el = carousel.children[c];
+          const off = el.offsetLeft - carousel.clientWidth/2 + el.clientWidth/2;
+          carousel.scrollTo({left:off,behavior:'smooth'});
+          carousel.scrollTo({left:off,behavior:'smooth'});
+          updateArrows(); updateDimmed();
+        },100);
+
+        carousel.addEventListener('scroll', ()=>{ updateArrows(); updateDimmed(); });
+        leftArrow.addEventListener('click', ()=> carousel.scrollBy({left:-carousel.clientWidth/2,behavior:'smooth'}));
+        rightArrow.addEventListener('click', ()=> carousel.scrollBy({left: carousel.clientWidth/2,behavior:'smooth'}));
       });
-
-      setTimeout(()=>{
-        const c=Math.max(2,Math.min(idx,carousel.children.length-3));
-        const el=carousel.children[c], off=el.offsetLeft-carousel.clientWidth/2+el.clientWidth/2;
-        carousel.scrollTo({left:off,behavior:'smooth'}); carousel.scrollTo({left:off,behavior:'smooth'});
-        updateArrows(); updateDimmed();
-      },100);
-
-      carousel.addEventListener('scroll',()=>{updateArrows();updateDimmed();});
-      leftArrow.addEventListener('click', ()=>carousel.scrollBy({left:-carousel.clientWidth/2,behavior:'smooth'}));
-      rightArrow.addEventListener('click',()=>carousel.scrollBy({left: carousel.clientWidth/2,behavior:'smooth'}));
-    });
   </script>
 </body>
 </html>
