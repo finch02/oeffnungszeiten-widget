@@ -81,13 +81,6 @@
       font-size: 0.9rem;
     }
 
-    .today-label {
-      font-weight: 400;
-      font-size: 0.8rem;
-      margin-top: 0.2rem;
-      color: #555;
-    }
-
     .dimmed {
       opacity: 0.35;
       transform: scale(0.92);
@@ -204,29 +197,11 @@
       const children = Array.from(carousel.children);
       const containerRect = carousel.getBoundingClientRect();
 
-      let leftMost = null;
-      let rightMost = null;
-      let minLeft = Infinity;
-      let maxRight = -Infinity;
-
-      children.forEach((child) => {
+      children.forEach(child => {
         const rect = child.getBoundingClientRect();
-        if (rect.left < minLeft) {
-          minLeft = rect.left;
-          leftMost = child;
-        }
-        if (rect.right > maxRight) {
-          maxRight = rect.right;
-          rightMost = child;
-        }
+        const isOutOfView = rect.right < containerRect.left + 10 || rect.left > containerRect.right - 10;
+        child.classList.toggle('dimmed', isOutOfView);
       });
-
-      children.forEach((child) => {
-        child.classList.remove('dimmed');
-      });
-
-      if (leftMost) leftMost.classList.add('dimmed');
-      if (rightMost && rightMost !== leftMost) rightMost.classList.add('dimmed');
     }
 
     fetch(sheetURL)
@@ -283,10 +258,6 @@
 
           if (e.dateObj.toDateString() === today.toDateString()) {
             div.classList.add('highlight-today');
-            const label = document.createElement('div');
-            label.className = 'today-label';
-            label.textContent = '(heute)';
-            div.appendChild(label);
           }
 
           carousel.appendChild(div);
