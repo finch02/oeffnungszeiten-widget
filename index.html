@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>\u00d6ffnungszeiten-Ampel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Öffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -33,20 +33,19 @@
     .carousel {
       display: flex;
       overflow-x: auto;
-      overflow-y: hidden;
       scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
       flex: 1;
       justify-content: center;
-      -webkit-overflow-scrolling: touch;
     }
 
     .day {
       flex: 0 0 20%;
-      text-align: center;
       scroll-snap-align: center;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      text-align: center;
+      transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
     .circle {
@@ -59,7 +58,6 @@
       font-size: 2rem;
       margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
     }
 
     .open {
@@ -122,23 +120,19 @@
     }
 
     @media (max-width: 480px) {
-      .day {
-        flex: 0 0 20%;
-      }
-
       .circle {
-        width: 52px;
-        height: 52px;
+        width: 48px;
+        height: 48px;
         font-size: 1.2rem;
       }
 
       .icon {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
       }
 
       .date {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
       }
 
       .arrow-left {
@@ -152,10 +146,11 @@
   </style>
 </head>
 <body>
+
   <div class="carousel-wrapper">
-    <div class="arrow arrow-left" id="leftArrow">\u2039</div>
+    <div class="arrow arrow-left" id="leftArrow">‹</div>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow arrow-right" id="rightArrow">\u203a</div>
+    <div class="arrow arrow-right" id="rightArrow">›</div>
   </div>
 
   <script>
@@ -258,13 +253,13 @@
           div.className = 'day';
 
           const circle = document.createElement('div');
-          const isOpen = e.status === 'ge\u00f6ffnet';
+          const isOpen = e.status === 'geöffnet';
           circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
 
           if (isOpen) {
             circle.appendChild(createCheckmarkSVG());
           } else {
-            circle.textContent = '\u2715';
+            circle.textContent = '✕';
           }
 
           const dateText = document.createElement('div');
@@ -310,5 +305,6 @@
       updateDimmedElements();
     });
   </script>
+
 </body>
 </html>
