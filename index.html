@@ -182,17 +182,11 @@
       const scrollWidth = carousel.scrollWidth;
       const clientWidth = carousel.clientWidth;
 
-      if (scrollLeft > 0) {
-        leftArrow.classList.add('arrow-visible');
-      } else {
-        leftArrow.classList.remove('arrow-visible');
-      }
+      const atStart = scrollLeft <= 1;
+      const atEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
 
-      if (scrollLeft + clientWidth >= scrollWidth - 1) {
-        rightArrow.classList.remove('arrow-visible');
-      } else {
-        rightArrow.classList.add('arrow-visible');
-      }
+      leftArrow.classList.toggle('arrow-visible', !atStart);
+      rightArrow.classList.toggle('arrow-visible', !atEnd);
     }
 
     fetch(sheetURL)
@@ -279,6 +273,7 @@
     });
 
     carousel.addEventListener('scroll', updateArrowVisibility);
+    window.addEventListener('load', updateArrowVisibility);
   </script>
 
 </body>
