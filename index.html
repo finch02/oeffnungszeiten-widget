@@ -18,7 +18,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 2rem 1rem;
+      padding: 1rem 1rem 2rem;
     }
 
     .carousel-wrapper {
@@ -57,7 +57,7 @@
       align-items: center;
       justify-content: center;
       font-size: 2rem;
-      margin: 0 auto 0.5rem;
+      margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       transition: box-shadow 0.3s ease;
     }
@@ -121,25 +121,26 @@
       right: -20px;
     }
 
+    /* Smartphones */
     @media (max-width: 480px) {
-      body {
-        padding-top: 2rem;
+      .day {
+        width: 20%;
+        flex: 0 0 20%;
       }
 
       .circle {
-        width: 56px;
-        height: 56px;
-        font-size: 1.4rem;
-        margin-bottom: 0.4rem;
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
       }
 
       .icon {
-        width: 22px;
-        height: 22px;
+        width: 24px;
+        height: 24px;
       }
 
       .date {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
       }
 
       .arrow-left {
@@ -148,6 +149,37 @@
 
       .arrow-right {
         right: -10px;
+      }
+    }
+
+    /* Tablets und kleine Laptops */
+    @media (min-width: 481px) and (max-width: 1024px) {
+      .day {
+        width: 18%;
+        flex: 0 0 18%;
+      }
+
+      .circle {
+        width: 68px;
+        height: 68px;
+        font-size: 1.8rem;
+      }
+
+      .icon {
+        width: 26px;
+        height: 26px;
+      }
+
+      .date {
+        font-size: 0.85rem;
+      }
+
+      .arrow-left {
+        left: -15px;
+      }
+
+      .arrow-right {
+        right: -15px;
       }
     }
   </style>
