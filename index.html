@@ -19,7 +19,7 @@
       align-items: center;
       background: #fff;
       color: #000;
-      padding: 3rem 1rem 2rem; /* <— mehr Abstand nach oben */
+      padding: 3rem 1rem 2rem;
     }
 
     .carousel-wrapper {
@@ -169,8 +169,8 @@
 
       days.forEach(day => day.classList.remove('dimmed'));
       if (visible.length >= 5) {
-        visible[0].classList.add('dimmed');
-        visible[visible.length - 1].classList.add('dimmed');
+        visible[0]?.classList.add('dimmed');
+        visible[visible.length - 1]?.classList.add('dimmed');
       }
     }
 
@@ -188,6 +188,7 @@
         const lines = text.trim().split('\n').slice(1);
         const entries = lines.map(line => {
           const [datum, status] = line.split('\t');
+          if (!datum || !status) return null;
           const dateObj = normalizeDate(datum.trim());
           return { datum, status, dateObj };
         }).filter(e => e && !isNaN(e.dateObj.getTime()));
