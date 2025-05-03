@@ -208,7 +208,7 @@
 
       const visible = days.filter((el) => {
         const rect = el.getBoundingClientRect();
-        return rect.right > wrapperRect.left + 4 && rect.left < wrapperRect.right - 4;
+        return rect.right > wrapperRect.left + 8 && rect.left < wrapperRect.right - 8;
       });
 
       days.forEach((el) => el.classList.remove("dimmed"));
