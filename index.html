@@ -121,20 +121,26 @@
       right: -20px;
     }
 
+    /* 🔧 MOBILE OPTIMIERUNG */
     @media (max-width: 480px) {
       .circle {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
+        width: 50px;
+        height: 50px;
+        font-size: 1.3rem;
+        margin-bottom: 0.3rem;
       }
 
       .icon {
-        width: 24px;
-        height: 24px;
+        width: 20px;
+        height: 20px;
       }
 
       .day {
-        flex: 0 0 20%;
+        flex: 0 0 16%;
+      }
+
+      .date {
+        font-size: 0.75rem;
       }
 
       .arrow-left {
@@ -145,10 +151,30 @@
         right: -10px;
       }
     }
+
+    @media (max-width: 360px) {
+      .circle {
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+      }
+
+      .icon {
+        width: 18px;
+        height: 18px;
+      }
+
+      .day {
+        flex: 0 0 14%;
+      }
+
+      .date {
+        font-size: 0.7rem;
+      }
+    }
   </style>
 </head>
 <body>
-
   <div class="carousel-wrapper">
     <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
@@ -307,9 +333,5 @@
       updateDimmedElements();
     });
   </script>
-
 </body>
 </html>
-
-
-
