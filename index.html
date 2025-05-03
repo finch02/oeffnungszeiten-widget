@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Öffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -10,11 +10,9 @@
     html, body {
       margin: 0;
       padding: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       font-family: 'Inter', sans-serif;
-      background: #fff;
-      color: #000;
+      background: #fff; color: #000;
       overflow-x: hidden;
     }
     body {
@@ -39,11 +37,11 @@
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
-      gap: 0.2rem;             /* leichter Abstand zwischen Kreisen */
+      gap: 0.2rem;
       justify-content: flex-start;
     }
 
-    /* Standard: fünf Items sichtbar */
+    /* Fünf Items pro Sicht (Desktop & Mobil) */
     .day {
       flex: 0 0 20%;
       scroll-snap-align: center;
@@ -51,12 +49,9 @@
       transition: opacity 0.3s, transform 0.3s;
     }
     .circle {
-      width: 72px;
-      height: 72px;
+      width: 72px; height: 72px;
       border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      display: flex; align-items: center; justify-content: center;
       font-size: 2rem;
       margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
@@ -69,63 +64,52 @@
       box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
     }
     .date {
-      font-size: 0.9rem;
-      font-weight: bold;
+      font-size: 0.9rem; font-weight: bold;
     }
     .dimmed {
-      opacity: 0.35;
-      transform: scale(0.92);
+      opacity: 0.35; transform: scale(0.92);
     }
     .icon {
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
     }
 
-    /* Pfeile */
+    /* Navigation-Pfeile */
     .arrow {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 2rem;
-      background: rgba(255,255,255,0.9);
-      border-radius: 50%;
-      padding: 0.3em 0.5em;
-      cursor: pointer;
-      user-select: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-      pointer-events: none;
-      z-index: 1;
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-size: 2rem; background: rgba(255,255,255,0.9);
+      border-radius: 50%; padding: 0.3em 0.5em;
+      cursor: pointer; user-select: none;
+      opacity: 0; transition: opacity 0.3s;
+      pointer-events: none; z-index: 1;
     }
-    .arrow-visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
+    .arrow-visible { opacity: 1; pointer-events: auto; }
     .arrow-left  { left: 8px; }
     .arrow-right { right: 8px; }
 
-    /* Mobile: fünf volle Kreise, kein Gap */
+    /* Mobile-Optimierung: volle Breite, 5 Icons mit space-between */
     @media (max-width: 480px) {
+      body { padding: 0; }
+      .carousel-wrapper {
+        max-width: none;
+        width: 100vw;
+      }
       .carousel {
         padding: 0.25rem 0;
-        gap: 0;             /* Kreise greifen sich kaum */
+        gap: 0;
+        justify-content: space-between;
       }
       .day {
-        flex: 0 0 20%;      /* exakt 5 Slots */
+        flex: 0 0 20%;
       }
       .circle {
-        width: 100%;
-        aspect-ratio: 1 / 1;
+        width: 100%; aspect-ratio: 1/1;
         font-size: calc(1rem + 1vw);
         margin-bottom: 0.2rem;
       }
       .icon {
-        width: 40%;
-        height: 40%;
+        width: 40%; height: 40%;
       }
-      .date {
-        font-size: 0.75rem;
-      }
+      .date { font-size: 0.75rem; }
     }
   </style>
 </head>
@@ -148,9 +132,7 @@
     }
 
     function formatDate(date) {
-      return date.toLocaleDateString('de-DE', {
-        day: '2-digit', month: '2-digit', year: '2-digit'
-      });
+      return date.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
     }
 
     function createCheckmarkSVG() {
@@ -190,50 +172,47 @@
     }
 
     fetch(sheetURL)
-      .then(r => r.text())
+      .then(res => res.text())
       .then(text => {
         const rows = text.trim().split('\n').slice(1);
         const entries = rows.map(line => {
-          const [date, stat] = line.split('\t');
-          if (!date || !stat) return null;
+          const [date, stat] = line.split('\t'); if (!date||!stat) return null;
           const d = normalizeDate(date.trim());
           return { dateObj: d, open: stat.trim().toLowerCase() === 'geöffnet' };
         }).filter(e => e && !isNaN(e.dateObj));
 
-        const today = new Date();
-        today.setHours(0,0,0,0);
-        const start = new Date(today); start.setDate(start.getDate() - 2);
-        const end   = new Date(today); end.setDate(end.getDate() + 14);
-
+        const today = new Date(); today.setHours(0,0,0,0);
+        const start = new Date(today); start.setDate(start.getDate()-2);
+        const end   = new Date(today); end.setDate(end.getDate()+14);
         const range = entries
           .filter(e => e.dateObj >= start && e.dateObj <= end)
-          .sort((a,b) => a.dateObj - b.dateObj);
-        const idx = range.findIndex(e => e.dateObj.toDateString() === today.toDateString());
+          .sort((a,b)=>a.dateObj - b.dateObj);
+        const idx = range.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
 
         range.forEach(e => {
-          const day = document.createElement('div'); day.className = 'day';
-          const cir = document.createElement('div');
-          cir.className = 'circle ' + (e.open ? 'open' : 'closed');
-          if (e.open) cir.appendChild(createCheckmarkSVG()); else cir.textContent = '✕';
-          const dt = document.createElement('div'); dt.className = 'date'; dt.textContent = formatDate(e.dateObj);
-          day.append(cir, dt);
-          if (e.dateObj.toDateString() === today.toDateString()) day.classList.add('highlight-today');
-          carousel.appendChild(day);
+          const dayEl = document.createElement('div'); dayEl.className = 'day';
+          const circ  = document.createElement('div');
+          circ.className = 'circle ' + (e.open?'open':'closed');
+          if (e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent = '✕';
+          const dt = document.createElement('div'); dt.className='date'; dt.textContent=formatDate(e.dateObj);
+          dayEl.append(circ, dt);
+          if (e.dateObj.toDateString() === today.toDateString()) dayEl.classList.add('highlight-today');
+          carousel.appendChild(dayEl);
         });
 
         setTimeout(() => {
-          const cent = Math.max(2, Math.min(idx, carousel.children.length - 3));
-          const el = carousel.children[cent];
-          const off = el.offsetLeft - carousel.offsetWidth/2 + el.offsetWidth/2;
-          carousel.scrollTo({ left: off, behavior: 'smooth' });
+          const centerIndex = Math.max(2, Math.min(idx, carousel.children.length-3));
+          const el = carousel.children[centerIndex];
+          const offset = el.offsetLeft - carousel.offsetWidth/2 + el.offsetWidth/2;
+          carousel.scrollTo({left:offset,behavior:'smooth'});
           updateArrowVisibility();
-          setTimeout(updateDimmed, 300);
-        }, 100);
+          setTimeout(updateDimmed,300);
+        },100);
       });
 
-    carousel.addEventListener('scroll', () => { updateArrowVisibility(); updateDimmed(); });
-    leftArrow.addEventListener('click', () => carousel.scrollBy({ left: -carousel.offsetWidth/2, behavior: 'smooth' }));
-    rightArrow.addEventListener('click', () => carousel.scrollBy({ left: carousel.offsetWidth/2, behavior: 'smooth' }));
+    carousel.addEventListener('scroll', ()=>{updateArrowVisibility();updateDimmed();});
+    leftArrow.addEventListener('click', ()=>carousel.scrollBy({left:-carousel.offsetWidth/2,behavior:'smooth'}));
+    rightArrow.addEventListener('click', ()=>carousel.scrollBy({left:carousel.offsetWidth/2,behavior:'smooth'}));
   </script>
 </body>
 </html>
