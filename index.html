@@ -2,95 +2,230 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Öffnungszeiten</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Öffnungszeiten-Ampel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     body {
+      font-family: 'Inter', sans-serif;
       margin: 0;
-      padding: 0;
-      font-family: system-ui, sans-serif;
       background: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .ampel {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .day {
+      color: #000;
       display: flex;
       flex-direction: column;
       align-items: center;
-      font-size: 0.85rem;
+      padding: 2rem 1rem;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .carousel-wrapper {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+      position: relative;
+    }
+
+    .carousel {
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding: 10px 0;
+      flex: 1;
+      touch-action: pan-x;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .day {
+      flex: 0 0 auto;
+      width: 90px;
+      text-align: center;
+      scroll-snap-align: center;
     }
 
     .circle {
-      width: 48px;
-      height: 48px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       display: flex;
-      justify-content: center;
       align-items: center;
-      color: #fff;
-      font-size: 1.2rem;
-      margin-bottom: 0.3rem;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 0.5rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .open {
       background-color: #f4c721;
-      color: black;
+      color: #fff;
     }
 
     .closed {
-      background-color: black;
-      color: white;
+      background-color: #000;
+      color: #fff;
     }
 
-    .faded {
-      opacity: 0.3;
+    .date {
+      font-weight: bold;
+      font-size: 0.9rem;
     }
 
-    @media (max-width: 600px) {
-      .circle {
-        width: 36px;
-        height: 36px;
-        font-size: 1rem;
+    .today {
+      font-weight: 700;
+    }
+
+    .today::after {
+      content: ' (heute)';
+      font-weight: 400;
+      font-size: 0.8rem;
+    }
+
+    .dimmed {
+      opacity: 0.4;
+      transform: scale(0.95);
+    }
+
+    .icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    @media (max-width: 480px) {
+      .day {
+        width: 70px;
       }
 
-      .day {
-        font-size: 0.7rem;
+      .circle {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+      }
+
+      .icon {
+        width: 24px;
+        height: 24px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="ampel">
-    <div class="day faded">
-      <div class="circle open">✔</div>
-      <div>01.05.25</div>
-    </div>
-    <div class="day">
-      <div class="circle open">✔</div>
-      <div>02.05.25</div>
-    </div>
-    <div class="day">
-      <div class="circle open">✔</div>
-      <div><strong>03.05.25<br/>(heute)</strong></div>
-    </div>
-    <div class="day">
-      <div class="circle open">✔</div>
-      <div>04.05.25</div>
-    </div>
-    <div class="day faded">
-      <div class="circle closed">✖</div>
-      <div>05.05.25</div>
-    </div>
+
+  <h1>Öffnungszeiten-Ampel</h1>
+
+  <div class="carousel-wrapper">
+    <div class="carousel" id="carousel"></div>
   </div>
+
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
+    const carousel = document.getElementById('carousel');
+
+    function normalizeDate(str) {
+      const [day, month, year] = str.split(".").map(Number);
+      return new Date(year < 100 ? 2000 + year : year, month - 1, day);
+    }
+
+    function formatDate(date) {
+      return date.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
+    }
+
+    function createCheckmarkSVG() {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "white");
+      svg.setAttribute("stroke-width", "3");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      svg.classList.add("icon");
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      path.setAttribute("points", "20 6 9 17 4 12");
+      svg.appendChild(path);
+      return svg;
+    }
+
+    fetch(sheetURL)
+      .then((response) => response.text())
+      .then((text) => {
+        const lines = text.trim().split('\n').slice(1);
+        const entries = lines.map(line => {
+          const [datum, status] = line.split('\t');
+          if (!datum || !status) return null;
+          const dateObj = normalizeDate(datum.trim());
+          return {
+            datum: datum.trim(),
+            status: status.trim().toLowerCase(),
+            dateObj
+          };
+        }).filter(e => e && !isNaN(e.dateObj.getTime()));
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 2 Tage zurück + heute + 14 Tage voraus
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 2);
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 14);
+
+        const fullRange = entries
+          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
+          .sort((a, b) => a.dateObj - b.dateObj);
+
+        const todayIndex = fullRange.findIndex(e =>
+          e.dateObj.toDateString() === today.toDateString()
+        );
+
+        fullRange.forEach((e, i) => {
+          const div = document.createElement('div');
+          div.className = 'day';
+          if (i === 0 || i === fullRange.length - 1) div.classList.add('dimmed');
+
+          const circle = document.createElement('div');
+          const isOpen = e.status === 'geöffnet';
+          circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
+
+          if (isOpen) {
+            circle.appendChild(createCheckmarkSVG());
+          } else {
+            circle.textContent = '✕';
+          }
+
+          const dateText = document.createElement('div');
+          const formatted = formatDate(e.dateObj);
+          dateText.className = 'date';
+          dateText.textContent = formatted;
+
+          if (e.dateObj.toDateString() === today.toDateString()) {
+            dateText.classList.add('today');
+          }
+
+          div.appendChild(circle);
+          div.appendChild(dateText);
+          carousel.appendChild(div);
+        });
+
+        // Heute mittig anzeigen (3. von 5 sichtbar)
+        setTimeout(() => {
+          if (todayIndex >= 0 && carousel.children.length > todayIndex - 2) {
+            const targetEl = carousel.children[todayIndex - 2] || carousel.children[0];
+            const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
+            carousel.scrollTo({ left: offset, behavior: 'smooth' });
+          }
+        }, 100);
+      });
+  </script>
+
 </body>
 </html>
