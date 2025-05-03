@@ -33,8 +33,10 @@
     .carousel {
       display: flex;
       overflow-x: auto;
+      overflow-y: hidden;
       scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
+      padding: 0.5rem 0;
       flex: 1;
       justify-content: center;
       -webkit-overflow-scrolling: touch;
@@ -57,6 +59,7 @@
       font-size: 2rem;
       margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
     }
 
     .open {
@@ -119,36 +122,38 @@
     }
 
     @media (max-width: 480px) {
-      .carousel-wrapper {
-        max-width: 100%;
+      .day {
+        flex: 0 0 20% !important;
       }
 
       .circle {
-        width: 52px;
-        height: 52px;
-        font-size: 1.2rem;
+        width: 52px !important;
+        height: 52px !important;
+        font-size: 1.2rem !important;
+        margin-bottom: 0.2rem !important;
       }
 
       .icon {
-        width: 20px;
-        height: 20px;
+        width: 20px !important;
+        height: 20px !important;
       }
 
       .date {
-        font-size: 0.75rem;
+        font-size: 0.7rem !important;
       }
 
       .arrow-left {
-        left: -10px;
+        left: -8px !important;
       }
 
       .arrow-right {
-        right: -10px;
+        right: -8px !important;
       }
     }
   </style>
 </head>
 <body>
+
   <div class="carousel-wrapper">
     <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
@@ -307,5 +312,6 @@
       updateDimmedElements();
     });
   </script>
+
 </body>
 </html>
