@@ -25,31 +25,28 @@
     .carousel {
       display: flex;
       overflow-x: auto;
-      scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
     }
 
     .day {
-      width: calc(100vw / 5);
-      max-width: 20%;
-      flex: 0 0 auto;
-      text-align: center;
+      flex: 0 0 120px;
       scroll-snap-align: center;
-      padding: 0.4rem 0;
+      padding: 0.5rem 0;
       box-sizing: border-box;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      text-align: center;
     }
 
     .circle {
-      width: 52px;
-      height: 52px;
+      width: 72px;
+      height: 72px;
+      font-size: 2rem;
+      margin: 0 auto 0.4rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
-      margin: 0 auto 0.2rem;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
@@ -63,18 +60,13 @@
       color: #fff;
     }
 
-    .icon {
-      width: 20px;
-      height: 20px;
+    .highlight-today .circle {
+      border: 3px solid #c59b00;
     }
 
     .date {
-      font-size: 0.7rem;
+      font-size: 0.9rem;
       font-weight: bold;
-    }
-
-    .highlight-today .circle {
-      border: 3px solid #c59b00;
     }
 
     .dimmed {
@@ -82,25 +74,31 @@
       transform: scale(0.92);
     }
 
-    @media (min-width: 768px) {
+    .icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    @media (max-width: 480px) {
       .day {
-        width: 120px;
-        max-width: none;
+        flex: 0 0 calc((100vw - 4px) / 5);
+        padding: 0;
       }
 
       .circle {
-        width: 72px;
-        height: 72px;
-        font-size: 2rem;
-      }
-
-      .icon {
-        width: 28px;
-        height: 28px;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+        margin-bottom: 0.2rem;
       }
 
       .date {
-        font-size: 0.9rem;
+        font-size: 0.7rem;
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
       }
     }
   </style>
@@ -167,10 +165,7 @@
         relevant.forEach((e, i) => {
           const dayEl = document.createElement('div');
           dayEl.className = 'day';
-
-          if (i === 0 || i === relevant.length - 1) {
-            dayEl.classList.add('dimmed');
-          }
+          if (i === 0 || i === relevant.length - 1) dayEl.classList.add('dimmed');
 
           const circle = document.createElement('div');
           circle.className = 'circle ' + (e.status === 'geöffnet' ? 'open' : 'closed');
