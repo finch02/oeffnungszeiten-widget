@@ -92,13 +92,20 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 2rem;
-      background: rgba(255,255,255,0.8);
+      background: rgba(255, 255, 255, 0.8);
       border-radius: 50%;
       padding: 0.2em 0.4em;
       cursor: pointer;
       user-select: none;
       z-index: 2;
-      display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .arrow-visible {
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .arrow-left {
@@ -168,6 +175,24 @@
       path.setAttribute("points", "20 6 9 17 4 12");
       svg.appendChild(path);
       return svg;
+    }
+
+    function updateArrowVisibility() {
+      const scrollLeft = carousel.scrollLeft;
+      const scrollWidth = carousel.scrollWidth;
+      const clientWidth = carousel.clientWidth;
+
+      if (scrollLeft > 0) {
+        leftArrow.classList.add('arrow-visible');
+      } else {
+        leftArrow.classList.remove('arrow-visible');
+      }
+
+      if (scrollLeft + clientWidth >= scrollWidth - 1) {
+        rightArrow.classList.remove('arrow-visible');
+      } else {
+        rightArrow.classList.add('arrow-visible');
+      }
     }
 
     fetch(sheetURL)
@@ -245,7 +270,6 @@
         }, 100);
       });
 
-    // Scroll-Logik mit Pfeilen
     rightArrow.addEventListener('click', () => {
       carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
     });
@@ -253,12 +277,6 @@
     leftArrow.addEventListener('click', () => {
       carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
     });
-
-    function updateArrowVisibility() {
-      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
-      leftArrow.style.display = carousel.scrollLeft > 10 ? 'block' : 'none';
-      rightArrow.style.display = carousel.scrollLeft < maxScrollLeft - 10 ? 'block' : 'none';
-    }
 
     carousel.addEventListener('scroll', updateArrowVisibility);
   </script>
