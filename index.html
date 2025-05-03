@@ -73,7 +73,8 @@
     }
 
     .highlight-today .circle {
-      border: 3px solid #e0b000;
+      border: 4px solid #c59b00;
+      box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
     }
 
     .date {
@@ -207,7 +208,7 @@
 
       const visible = days.filter((el) => {
         const rect = el.getBoundingClientRect();
-        return rect.right > wrapperRect.left + 1 && rect.left < wrapperRect.right - 1;
+        return rect.right > wrapperRect.left + 4 && rect.left < wrapperRect.right - 4;
       });
 
       days.forEach((el) => el.classList.remove("dimmed"));
