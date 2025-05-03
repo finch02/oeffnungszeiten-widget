@@ -280,9 +280,8 @@
           }
 
           const dateText = document.createElement('div');
-          const formatted = formatDate(e.dateObj);
           dateText.className = 'date';
-          dateText.textContent = formatted;
+          dateText.textContent = formatDate(e.dateObj);
 
           div.appendChild(circle);
           div.appendChild(dateText);
