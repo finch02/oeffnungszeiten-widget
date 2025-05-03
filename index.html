@@ -197,11 +197,17 @@
       const children = Array.from(carousel.children);
       const containerRect = carousel.getBoundingClientRect();
 
-      children.forEach(child => {
-        const rect = child.getBoundingClientRect();
-        const isOutOfView = rect.right < containerRect.left + 10 || rect.left > containerRect.right - 10;
-        child.classList.toggle('dimmed', isOutOfView);
+      const visible = children.filter((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.right > containerRect.left && rect.left < containerRect.right;
       });
+
+      children.forEach((el) => el.classList.remove("dimmed"));
+
+      if (visible.length > 1) {
+        visible[0].classList.add("dimmed");
+        visible[visible.length - 1].classList.add("dimmed");
+      }
     }
 
     fetch(sheetURL)
