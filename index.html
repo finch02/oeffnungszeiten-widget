@@ -6,6 +6,10 @@
   <title>Öffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     html, body {
       margin: 0;
       font-family: 'Inter', sans-serif;
@@ -26,25 +30,26 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
       position: relative;
+      overflow: hidden;
     }
 
     .carousel {
       display: flex;
-      scroll-snap-type: x mandatory;
+      flex-wrap: nowrap;
       overflow-x: auto;
-      gap: 0.5rem;
-      padding: 1rem 0;
-      scroll-padding: 0 50%;
+      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      padding: 0.5rem 0;
+      flex: 1;
       -webkit-overflow-scrolling: touch;
     }
 
     .day {
-      flex: 0 0 auto;
-      width: 110px;
-      scroll-snap-align: center;
+      flex: 0 0 calc(100% / 5);
       text-align: center;
+      scroll-snap-align: center;
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
@@ -68,25 +73,37 @@
       box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
     }
 
-    .date { font-weight: bold; font-size: 0.9rem; }
+    .date {
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
 
     .dimmed {
       opacity: 0.35;
       transform: scale(0.92);
     }
 
-    .icon { width: 28px; height: 28px; }
+    .icon {
+      width: 28px;
+      height: 28px;
+    }
 
     .arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      background: transparent;
-      border: none;
       font-size: 1.5rem;
+      background: none;
+      border: none;
       color: #000;
       cursor: pointer;
+      user-select: none;
       z-index: 2;
+      opacity: 0.6;
+    }
+
+    .arrow:hover {
+      opacity: 1;
     }
 
     .arrow-left { left: 0; }
@@ -94,31 +111,26 @@
 
     @media (max-width: 480px) {
       .circle {
-        width: 56px;
-        height: 56px;
-        font-size: 1.3rem;
+        width: 52px;
+        height: 52px;
+        font-size: 1.4rem;
       }
-
       .icon {
         width: 22px;
         height: 22px;
       }
-
-      .day {
-        width: 80px;
-      }
-
-      .arrow {
-        font-size: 1.2rem;
+      .date {
+        font-size: 0.75rem;
       }
     }
   </style>
 </head>
 <body>
+
   <div class="carousel-wrapper">
-    <button class="arrow arrow-left" id="leftArrow">❮</button>
+    <button class="arrow arrow-left" id="leftArrow">‹</button>
     <div class="carousel" id="carousel"></div>
-    <button class="arrow arrow-right" id="rightArrow">❯</button>
+    <button class="arrow arrow-right" id="rightArrow">›</button>
   </div>
 
   <script>
@@ -136,7 +148,7 @@
       return date.toLocaleDateString("de-DE", {
         day: "2-digit",
         month: "2-digit",
-        year: "2-digit"
+        year: "2-digit",
       });
     }
 
@@ -149,6 +161,7 @@
       svg.setAttribute("stroke-linecap", "round");
       svg.setAttribute("stroke-linejoin", "round");
       svg.classList.add("icon");
+
       const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
       path.setAttribute("points", "20 6 9 17 4 12");
       svg.appendChild(path);
@@ -161,7 +174,7 @@
 
       const visible = days.filter((el) => {
         const rect = el.getBoundingClientRect();
-        return rect.right > wrapperRect.left + 10 && rect.left < wrapperRect.right - 10;
+        return rect.right > wrapperRect.left + 8 && rect.left < wrapperRect.right - 8;
       });
 
       days.forEach((el) => el.classList.remove("dimmed"));
@@ -173,43 +186,61 @@
     }
 
     fetch(sheetURL)
-      .then(response => response.text())
-      .then(text => {
+      .then((response) => response.text())
+      .then((text) => {
         const lines = text.trim().split('\n').slice(1);
         const entries = lines.map(line => {
           const [datum, status] = line.split('\t');
+          if (!datum || !status) return null;
           const dateObj = normalizeDate(datum.trim());
-          return { datum: datum.trim(), status: status.trim().toLowerCase(), dateObj };
-        }).filter(e => !isNaN(e.dateObj.getTime()));
+          return {
+            datum: datum.trim(),
+            status: status.trim().toLowerCase(),
+            dateObj
+          };
+        }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
 
-        const fullRange = entries.filter(e =>
-          e.dateObj >= new Date(today.getTime() - 2*86400000) &&
-          e.dateObj <= new Date(today.getTime() + 14*86400000)
-        ).sort((a,b) => a.dateObj - b.dateObj);
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 2);
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 14);
 
-        const todayIndex = fullRange.findIndex(e => e.dateObj.toDateString() === today.toDateString());
+        const fullRange = entries
+          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
+          .sort((a, b) => a.dateObj - b.dateObj);
 
-        fullRange.forEach(e => {
+        const todayIndex = fullRange.findIndex(e =>
+          e.dateObj.toDateString() === today.toDateString()
+        );
+
+        fullRange.forEach((e) => {
           const div = document.createElement('div');
           div.className = 'day';
+
           const circle = document.createElement('div');
           const isOpen = e.status === 'geöffnet';
           circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
-          isOpen ? circle.appendChild(createCheckmarkSVG()) : circle.textContent = '✕';
+
+          if (isOpen) {
+            circle.appendChild(createCheckmarkSVG());
+          } else {
+            circle.textContent = '✕';
+          }
 
           const dateText = document.createElement('div');
           dateText.className = 'date';
           dateText.textContent = formatDate(e.dateObj);
 
+          div.appendChild(circle);
+          div.appendChild(dateText);
+
           if (e.dateObj.toDateString() === today.toDateString()) {
             div.classList.add('highlight-today');
           }
 
-          div.appendChild(circle);
-          div.appendChild(dateText);
           carousel.appendChild(div);
         });
 
@@ -218,13 +249,18 @@
           const targetEl = carousel.children[centerIndex];
           const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
           carousel.scrollTo({ left: offset, behavior: 'smooth' });
+
           updateDimmedElements();
         }, 100);
       });
 
     carousel.addEventListener('scroll', updateDimmedElements);
-    leftArrow.addEventListener('click', () => carousel.scrollBy({ left: -130, behavior: 'smooth' }));
-    rightArrow.addEventListener('click', () => carousel.scrollBy({ left: 130, behavior: 'smooth' }));
+    leftArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
+    rightArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
   </script>
 </body>
 </html>
