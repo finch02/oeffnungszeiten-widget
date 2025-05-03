@@ -128,6 +128,8 @@
       body {
         transform: scale(0.9);
         transform-origin: top center;
+        height: 100vh;
+        overflow: hidden;
       }
     }
 
@@ -295,7 +297,27 @@
     window.addEventListener('load', () => {
       updateArrowVisibility();
       updateDimmedElements();
+      enforceMobileScaling();
     });
+
+    window.addEventListener('resize', enforceMobileScaling);
+
+    function enforceMobileScaling() {
+      const width = window.innerWidth;
+      const body = document.body;
+
+      if (width <= 360) {
+        body.style.transform = "scale(0.8)";
+      } else if (width <= 480) {
+        body.style.transform = "scale(0.9)";
+      } else {
+        body.style.transform = "scale(1)";
+      }
+
+      body.style.transformOrigin = "top center";
+      body.style.height = "100vh";
+      body.style.overflow = "hidden";
+    }
   </script>
 </body>
 </html>
