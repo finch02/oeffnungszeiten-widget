@@ -19,6 +19,8 @@
       flex-direction: column;
       align-items: center;
       padding: 1rem 1rem 2rem;
+      width: 100vw;
+      overflow-x: hidden;
     }
 
     .carousel-wrapper {
@@ -119,6 +121,20 @@
 
     .arrow-right {
       right: -20px;
+    }
+
+    /* 📱 Mobile Skalierung */
+    @media (max-width: 480px) {
+      body {
+        transform: scale(0.9);
+        transform-origin: top center;
+      }
+    }
+
+    @media (max-width: 360px) {
+      body {
+        transform: scale(0.8);
+      }
     }
   </style>
 </head>
@@ -279,25 +295,7 @@
     window.addEventListener('load', () => {
       updateArrowVisibility();
       updateDimmedElements();
-      scaleForMobile(); // ruft Skalierung direkt auf
     });
-
-    window.addEventListener('resize', scaleForMobile);
-
-    function scaleForMobile() {
-      const width = window.innerWidth;
-      const html = document.documentElement;
-
-      if (width <= 360) {
-        html.style.transform = "scale(0.8)";
-      } else if (width <= 480) {
-        html.style.transform = "scale(0.9)";
-      } else {
-        html.style.transform = "scale(1)";
-      }
-
-      html.style.transformOrigin = "top center";
-    }
   </script>
 </body>
 </html>
