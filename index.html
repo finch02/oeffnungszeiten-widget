@@ -194,17 +194,17 @@
     }
 
     function updateDimmedElements() {
-      const children = Array.from(carousel.children);
-      const containerRect = carousel.getBoundingClientRect();
+      const days = Array.from(carousel.children);
+      const wrapperRect = carousel.getBoundingClientRect();
 
-      const visible = children.filter((el) => {
+      const visible = days.filter((el) => {
         const rect = el.getBoundingClientRect();
-        return rect.right > containerRect.left && rect.left < containerRect.right;
+        return rect.right > wrapperRect.left && rect.left < wrapperRect.right;
       });
 
-      children.forEach((el) => el.classList.remove("dimmed"));
+      days.forEach((el) => el.classList.remove("dimmed"));
 
-      if (visible.length > 1) {
+      if (visible.length >= 3) {
         visible[0].classList.add("dimmed");
         visible[visible.length - 1].classList.add("dimmed");
       }
