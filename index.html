@@ -98,11 +98,11 @@
       cursor: pointer;
       user-select: none;
       z-index: 2;
+      display: none;
     }
 
     .arrow-left {
       left: -10px;
-      display: none;
     }
 
     .arrow-right {
@@ -240,6 +240,8 @@
           const targetEl = carousel.children[centerIndex];
           const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
           carousel.scrollTo({ left: offset, behavior: 'smooth' });
+
+          updateArrowVisibility();
         }, 100);
       });
 
@@ -252,13 +254,13 @@
       carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
     });
 
-    carousel.addEventListener('scroll', () => {
-      if (carousel.scrollLeft > 10) {
-        leftArrow.style.display = 'block';
-      } else {
-        leftArrow.style.display = 'none';
-      }
-    });
+    function updateArrowVisibility() {
+      const maxScrollLeft = carousel.scrollWidth - carousel.clientWidth;
+      leftArrow.style.display = carousel.scrollLeft > 10 ? 'block' : 'none';
+      rightArrow.style.display = carousel.scrollLeft < maxScrollLeft - 10 ? 'block' : 'none';
+    }
+
+    carousel.addEventListener('scroll', updateArrowVisibility);
   </script>
 
 </body>
