@@ -62,7 +62,8 @@
       flex: 0 0 20%;
       text-align: center;
       scroll-snap-align: center;
-      transition: transform 0.2s ease, opacity 0.2s ease;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 1;
     }
 
     .circle {
@@ -92,21 +93,15 @@
       font-size: 0.9rem;
     }
 
-    .today-label {
-      font-weight: 400;
-      font-size: 0.8rem;
-      margin-top: 0.2rem;
-      color: #555;
-    }
-
     .today-glow .circle {
       outline: 3px solid #c49b08;
       box-shadow: 0 0 8px #c49b08aa;
     }
 
     .dimmed {
-      opacity: 0.4;
-      transform: scale(0.95);
+      opacity: 0.4 !important;
+      transform: scale(0.9) translateY(4px);
+      z-index: 0;
     }
 
     .icon {
@@ -225,7 +220,6 @@
       const observer = new IntersectionObserver((entries) => {
         const visible = entries.filter(e => e.isIntersecting).map(e => e.target);
 
-        // Reset all
         document.querySelectorAll('.day').forEach(el => el.classList.remove('dimmed'));
 
         if (visible.length >= 5) {
@@ -295,10 +289,6 @@
 
           if (e.dateObj.toDateString() === today.toDateString()) {
             div.classList.add('today-glow');
-            const label = document.createElement('div');
-            label.className = 'today-label';
-            label.textContent = '(heute)';
-            div.appendChild(label);
           }
 
           carousel.appendChild(div);
