@@ -72,6 +72,10 @@
       color: #fff;
     }
 
+    .highlight-today .circle {
+      border: 3px solid #e0b000;
+    }
+
     .date {
       font-weight: bold;
       font-size: 0.9rem;
@@ -87,10 +91,6 @@
     .dimmed {
       opacity: 0.35;
       transform: scale(0.92);
-    }
-
-    .highlight-today .circle {
-      box-shadow: 0 0 10px 2px #f4c721aa;
     }
 
     .icon {
@@ -137,6 +137,10 @@
       .icon {
         width: 24px;
         height: 24px;
+      }
+
+      .day {
+        flex: 0 0 20%;
       }
     }
   </style>
@@ -200,12 +204,29 @@
       const children = Array.from(carousel.children);
       const containerRect = carousel.getBoundingClientRect();
 
-      children.forEach((child, index) => {
+      let leftMost = null;
+      let rightMost = null;
+      let minLeft = Infinity;
+      let maxRight = -Infinity;
+
+      children.forEach((child) => {
         const rect = child.getBoundingClientRect();
-        const isLeft = rect.right < containerRect.left + 10;
-        const isRight = rect.left > containerRect.right - 10;
-        child.classList.toggle('dimmed', isLeft || isRight);
+        if (rect.left < minLeft) {
+          minLeft = rect.left;
+          leftMost = child;
+        }
+        if (rect.right > maxRight) {
+          maxRight = rect.right;
+          rightMost = child;
+        }
       });
+
+      children.forEach((child) => {
+        child.classList.remove('dimmed');
+      });
+
+      if (leftMost) leftMost.classList.add('dimmed');
+      if (rightMost && rightMost !== leftMost) rightMost.classList.add('dimmed');
     }
 
     fetch(sheetURL)
