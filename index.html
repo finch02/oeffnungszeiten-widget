@@ -21,6 +21,8 @@
       padding: 1rem 1rem 2rem;
       width: 100vw;
       overflow-x: hidden;
+      /* Kein globales Scaling mehr */
+      transform: none;
     }
 
     .carousel-wrapper {
@@ -123,7 +125,7 @@
       right: -20px;
     }
 
-    /* Anpassungen für Mobile */
+    /* Mobile Anpassungen */
     @media (max-width: 480px) {
       .circle {
         width: 56px;
@@ -169,7 +171,8 @@
   <div class="carousel-wrapper">
     <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow arrow-right" id="rightArrow">&#8250;</div>
+    <div class="arrow arrow-right" id="rightArrow">&#8250;</
+div>
   </div>
 
   <script>
@@ -223,13 +226,12 @@
       const days = Array.from(carousel.children);
       const wrapperRect = carousel.getBoundingClientRect();
 
-      const visible = days.filter((el) => {
+      const visible = days.filter(el => {
         const rect = el.getBoundingClientRect();
         return rect.right > wrapperRect.left + 8 && rect.left < wrapperRect.right - 8;
       });
 
-      days.forEach((el) => el.classList.remove("dimmed"));
-
+      days.forEach(el => el.classList.remove("dimmed"));
       if (visible.length >= 3) {
         visible[0].classList.add("dimmed");
         visible[visible.length - 1].classList.add("dimmed");
@@ -237,8 +239,8 @@
     }
 
     fetch(sheetURL)
-      .then((response) => response.text())
-      .then((text) => {
+      .then(res => res.text())
+      .then(text => {
         const lines = text.trim().split('\n').slice(1);
         const entries = lines.map(line => {
           const [datum, status] = line.split('\t');
@@ -247,78 +249,42 @@
           return { datum: datum.trim(), status: status.trim().toLowerCase(), dateObj };
         }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const startDate = new Date(today); startDate.setDate(startDate.getDate()-2);
+        const endDate = new Date(today); endDate.setDate(endDate.getDate()+14);
 
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 2);
-        const endDate = new Date(today);
-        endDate.setDate(endDate.getDate() + 14);
+        const fullRange = entries.filter(e => e.dateObj>=startDate && e.dateObj<=endDate)
+                                 .sort((a,b)=>a.dateObj-b.dateObj);
+        const todayIndex = fullRange.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
 
-        const fullRange = entries
-          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
-          .sort((a, b) => a.dateObj - b.dateObj);
-
-        const todayIndex = fullRange.findIndex(e =>
-          e.dateObj.toDateString() === today.toDateString()
-        );
-
-        fullRange.forEach((e) => {
-          const div = document.createElement('div');
-          div.className = 'day';
-
-          const circle = document.createElement('div');
-          const isOpen = e.status === 'geöffnet';
-          circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
-
-          if (isOpen) {
-            circle.appendChild(createCheckmarkSVG());
-          } else {
-            circle.textContent = '✕';
-          }
-
-          const dateText = document.createElement('div');
-          dateText.className = 'date';
-          dateText.textContent = formatDate(e.dateObj);
-
-          div.appendChild(circle);
-          div.appendChild(dateText);
-
-          if (e.dateObj.toDateString() === today.toDateString()) {
-            div.classList.add('highlight-today');
-          }
-
+        fullRange.forEach(e=>{
+          const div=document.createElement('div'); div.className='day';
+          const circle=document.createElement('div');
+          const isOpen=e.status==='geöffnet';
+          circle.className='circle '+(isOpen?'open':'closed');
+          isOpen?circle.appendChild(createCheckmarkSVG()):circle.textContent='✕';
+          const dateText=document.createElement('div'); dateText.className='date';
+          dateText.textContent=formatDate(e.dateObj);
+          div.append(circle,dateText);
+          if(e.dateObj.toDateString()===today.toDateString()) div.classList.add('highlight-today');
           carousel.appendChild(div);
         });
 
-        setTimeout(() => {
-          const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
-          const targetEl = carousel.children[centerIndex];
-          const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
-          carousel.scrollTo({ left: offset, behavior: 'smooth' });
-
+        setTimeout(()=>{
+          const centerIndex=Math.max(2,Math.min(todayIndex,carousel.children.length-3));
+          const targetEl=carousel.children[centerIndex];
+          const offset=targetEl.offsetLeft-carousel.offsetWidth/2+targetEl.offsetWidth/2;
+          carousel.scrollTo({left:offset,behavior:'smooth'});
           updateArrowVisibility();
-          setTimeout(updateDimmedElements, 300);
-        }, 100);
+          setTimeout(updateDimmedElements,300);
+        },100);
       });
 
-    carousel.addEventListener('scroll', () => {
-      updateArrowVisibility();
-      updateDimmedElements();
-    });
+    carousel.addEventListener('scroll',()=>{ updateArrowVisibility(); updateDimmedElements(); });
+    leftArrow.addEventListener('click',()=> carousel.scrollBy({left:-carousel.offsetWidth/2,behavior:'smooth'}));
+    rightArrow.addEventListener('click',()=> carousel.scrollBy({left:carousel.offsetWidth/2,behavior:'smooth'}));
 
-    leftArrow.addEventListener('click', () => {
-      carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
-    });
-
-    rightArrow.addEventListener('click', () => {
-      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
-    });
-
-    window.addEventListener('load', () => {
-      updateArrowVisibility();
-      updateDimmedElements();
-    });
+    window.addEventListener('load',()=>{ updateArrowVisibility(); updateDimmedElements(); });
   </script>
 </body>
 </html>
