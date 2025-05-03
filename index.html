@@ -1,113 +1,154 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Öffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* Basis-Variablen */
-    :root {
-      --circle-size: 72px;
-      --circle-margin: 0.4rem;
-      --gap-main: 0.5rem;
-    }
-
-    /* Reset & Grundstyles */
     html, body {
       margin: 0;
-      padding: 0;
-      width: 100%; height: 100%;
       font-family: 'Inter', sans-serif;
-      background: #fff; color: #000;
+      background: #fff;
+      color: #000;
       overflow-x: hidden;
     }
+
     body {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1rem;
+      padding: 1rem 1rem 2rem;
     }
 
-    /* Carousel-Wrapper sticky */
     .carousel-wrapper {
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-      background: #fff;
-      width: 100vw;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 600px;
+      position: relative;
       overflow: hidden;
-      margin-bottom: 2rem;
-      touch-action: none;
     }
+
     .carousel {
       display: flex;
       overflow-x: auto;
+      overflow-y: hidden;
       scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
-      gap: var(--gap-main);
-      justify-content: flex-start;
-      touch-action: pan-x;
+      flex: 1;
+      justify-content: center;
+      -webkit-overflow-scrolling: touch;
     }
 
-    /* Slots: 20% standard */
     .day {
       flex: 0 0 20%;
-      scroll-snap-align: center;
       text-align: center;
-      transition: opacity 0.3s, transform 0.3s;
+      scroll-snap-align: center;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     .circle {
-      width: var(--circle-size);
-      height: var(--circle-size);
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 2rem;
-      margin: 0 auto var(--circle-margin);
+      margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s;
+      transition: box-shadow 0.3s ease;
     }
-    .open   { background-color: #f4c721; color: #fff; }
-    .closed { background-color: #000;    color: #fff; }
+
+    .open {
+      background-color: #f4c721;
+      color: #fff;
+    }
+
+    .closed {
+      background-color: #000;
+      color: #fff;
+    }
+
     .highlight-today .circle {
       border: 4px solid #c59b00;
       box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
     }
 
     .date {
-      font-family: 'Inter', sans-serif !important;
-      font-size: 0.9rem;
       font-weight: bold;
+      font-size: 0.9rem;
     }
-    .dimmed { opacity: 0.35; transform: scale(0.92); }
-    .icon { width: 28px; height: 28px; }
+
+    .dimmed {
+      opacity: 0.35;
+      transform: scale(0.92);
+    }
+
+    .icon {
+      width: 28px;
+      height: 28px;
+    }
 
     .arrow {
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
       font-size: 2rem;
-      background: rgba(255,255,255,0.9);
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 50%;
       padding: 0.3em 0.5em;
       cursor: pointer;
       user-select: none;
+      z-index: 2;
       opacity: 0;
-      transition: opacity 0.3s;
+      transition: opacity 0.3s ease;
       pointer-events: none;
-      z-index: 1;
     }
-    .arrow-visible { opacity: 1; pointer-events: auto; }
-    .arrow-left  { left: 8px; }
-    .arrow-right { right: 8px; }
+
+    .arrow-visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .arrow-left {
+      left: -20px;
+    }
+
+    .arrow-right {
+      right: -20px;
+    }
+
+    @media (max-width: 480px) {
+      .circle {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+      }
+
+      .icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .day {
+        flex: 0 0 20%;
+      }
+
+      .arrow-left {
+        left: -10px;
+      }
+
+      .arrow-right {
+        right: -10px;
+      }
+    }
   </style>
 </head>
 <body>
+
   <div class="carousel-wrapper">
     <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
@@ -115,105 +156,160 @@
   </div>
 
   <script>
-    const sheetURL = 'https://docs.google.com/.../pub?output=tsv';
-    const carousel   = document.getElementById('carousel');
-    const leftArrow  = document.getElementById('leftArrow');
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
+    const carousel = document.getElementById('carousel');
+    const leftArrow = document.getElementById('leftArrow');
     const rightArrow = document.getElementById('rightArrow');
 
     function normalizeDate(str) {
-      const [d,m,y] = str.split('.').map(Number);
-      return new Date(y < 100 ? 2000 + y : y, m - 1, d);
+      const [day, month, year] = str.split(".").map(Number);
+      return new Date(year < 100 ? 2000 + year : year, month - 1, day);
     }
+
     function formatDate(date) {
-      return date.toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit', year:'2-digit' });
+      return date.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      });
     }
+
     function createCheckmarkSVG() {
-      const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-      svg.setAttribute('viewBox','0 0 24 24');
-      svg.setAttribute('fill','none');
-      svg.setAttribute('stroke','white');
-      svg.setAttribute('stroke-width','3');
-      svg.setAttribute('stroke-linecap','round');
-      svg.setAttribute('stroke-linejoin','round');
-      svg.classList.add('icon');
-      const path = document.createElementNS('http://www.w3.org/2000/svg','polyline');
-      path.setAttribute('points','20 6 9 17 4 12');
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 24 24");
+      svg.setAttribute("fill", "none");
+      svg.setAttribute("stroke", "white");
+      svg.setAttribute("stroke-width", "3");
+      svg.setAttribute("stroke-linecap", "round");
+      svg.setAttribute("stroke-linejoin", "round");
+      svg.classList.add("icon");
+
+      const path = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      path.setAttribute("points", "20 6 9 17 4 12");
       svg.appendChild(path);
       return svg;
     }
 
-    function applyMobileSizing() {
-      if (window.innerWidth <= 480) {
-        document.documentElement.style.setProperty('--circle-size', '48px');
-        document.documentElement.style.setProperty('--circle-margin', '0.25rem');
-        document.documentElement.style.setProperty('--gap-main', '1rem');
-        // flex basis change for .day
-        document.querySelectorAll('.day').forEach(el => el.style.flex = '0 0 20vw');
-      }
-    }
-    function scrollToToday(idx) {
-      const center = Math.max(2, Math.min(idx, carousel.children.length - 3));
-      const el = carousel.children[center];
-      const offset = el.offsetLeft - (carousel.clientWidth / 2) + (el.clientWidth / 2);
-      carousel.scrollTo({ left: offset, behavior: 'smooth' });
-      carousel.scrollTo({ left: offset, behavior: 'smooth' });
-    }
     function updateArrowVisibility() {
-      const sc  = carousel.scrollLeft;
-      const max = carousel.scrollWidth - carousel.clientWidth;
-      leftArrow.classList.toggle('arrow-visible', sc > 1);
-      rightArrow.classList.toggle('arrow-visible', sc < max - 1);
+      const scrollLeft = carousel.scrollLeft;
+      const scrollWidth = carousel.scrollWidth;
+      const clientWidth = carousel.clientWidth;
+
+      const atStart = scrollLeft <= 1;
+      const atEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
+
+      leftArrow.classList.toggle('arrow-visible', !atStart);
+      rightArrow.classList.toggle('arrow-visible', !atEnd);
     }
-    function updateDimmed() {
+
+    function updateDimmedElements() {
       const days = Array.from(carousel.children);
-      const rect = carousel.getBoundingClientRect();
-      const vis = days.filter(el => {
-        const r = el.getBoundingClientRect();
-        return r.right > rect.left + 8 && r.left < rect.right - 8;
+      const wrapperRect = carousel.getBoundingClientRect();
+
+      const visible = days.filter((el) => {
+        const rect = el.getBoundingClientRect();
+        return rect.right > wrapperRect.left + 8 && rect.left < wrapperRect.right - 8;
       });
-      days.forEach(el => el.classList.remove('dimmed'));
-      if (vis.length >= 3) vis.slice([0,-1]).forEach(e => e.classList.add('dimmed'));
+
+      days.forEach((el) => el.classList.remove("dimmed"));
+
+      if (visible.length >= 3) {
+        visible[0].classList.add("dimmed");
+        visible[visible.length - 1].classList.add("dimmed");
+      }
     }
 
     fetch(sheetURL)
-      .then(r => r.text())
-      .then(text => {
-        const rows = text.trim().split('\n').slice(1);
-        const entries = rows.map(line => {
-          const [date, stat] = line.split('\t'); if (!date || !stat) return null;
-          return { dateObj: normalizeDate(date.trim()), open: stat.trim().toLowerCase() === 'geöffnet' };
-        }).filter(e => e && !isNaN(e.dateObj));
+      .then((response) => response.text())
+      .then((text) => {
+        const lines = text.trim().split('\n').slice(1);
+        const entries = lines.map(line => {
+          const [datum, status] = line.split('\t');
+          if (!datum || !status) return null;
+          const dateObj = normalizeDate(datum.trim());
+          return {
+            datum: datum.trim(),
+            status: status.trim().toLowerCase(),
+            dateObj
+          };
+        }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
-        const today = new Date(); today.setHours(0,0,0,0);
-        const start = new Date(today); start.setDate(start.getDate() - 2);
-        const end   = new Date(today); end.setDate(end.getDate() + 14);
-        const range = entries.filter(e => e.dateObj >= start && e.dateObj <= end).sort((a,b) => a.dateObj - b.dateObj);
-        const idx = range.findIndex(e => e.dateObj.toDateString() === today.toDateString());
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-        range.forEach(e => {
-          const dayEl = document.createElement('div'); dayEl.className = 'day';
-          const circ  = document.createElement('div'); circ.className = 'circle ' + (e.open ? 'open' : 'closed');
-          if (e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent = '✕';
-          const dt = document.createElement('div'); dt.className = 'date'; dt.textContent = formatDate(e.dateObj);
-          dayEl.append(circ, dt);
-          if (e.dateObj.toDateString() === today.toDateString()) dayEl.classList.add('highlight-today');
-          carousel.appendChild(dayEl);
+        const startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 2);
+        const endDate = new Date(today);
+        endDate.setDate(endDate.getDate() + 14);
+
+        const fullRange = entries
+          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
+          .sort((a, b) => a.dateObj - b.dateObj);
+
+        const todayIndex = fullRange.findIndex(e =>
+          e.dateObj.toDateString() === today.toDateString()
+        );
+
+        fullRange.forEach((e) => {
+          const div = document.createElement('div');
+          div.className = 'day';
+
+          const circle = document.createElement('div');
+          const isOpen = e.status === 'geöffnet';
+          circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
+
+          if (isOpen) {
+            circle.appendChild(createCheckmarkSVG());
+          } else {
+            circle.textContent = '✕';
+          }
+
+          const dateText = document.createElement('div');
+          dateText.className = 'date';
+          dateText.textContent = formatDate(e.dateObj);
+
+          div.appendChild(circle);
+          div.appendChild(dateText);
+
+          if (e.dateObj.toDateString() === today.toDateString()) {
+            div.classList.add('highlight-today');
+          }
+
+          carousel.appendChild(div);
         });
 
-        applyMobileSizing();
         setTimeout(() => {
-          scrollToToday(idx);
-          updateArrowVisibility(); updateDimmed();
-        }, 200);
-        window.addEventListener('resize', () => {
-          applyMobileSizing();
-          scrollToToday(idx);
-        });
+          const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
+          const targetEl = carousel.children[centerIndex];
+          const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
+          carousel.scrollTo({ left: offset, behavior: 'smooth' });
+
+          updateArrowVisibility();
+          setTimeout(updateDimmedElements, 300);
+        }, 100);
       });
 
-    carousel.addEventListener('scroll', () => { updateArrowVisibility(); updateDimmed(); });
-    leftArrow.addEventListener('click', () => carousel.scrollBy({ left: -carousel.clientWidth/2, behavior: 'smooth' }));
-    rightArrow.addEventListener('click', () => carousel.scrollBy({ left: carousel.clientWidth/2, behavior: 'smooth' }));
+    carousel.addEventListener('scroll', () => {
+      updateArrowVisibility();
+      updateDimmedElements();
+    });
+
+    leftArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
+
+    rightArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
+
+    window.addEventListener('load', () => {
+      updateArrowVisibility();
+      updateDimmedElements();
+    });
   </script>
+
 </body>
 </html>
+
+
+
