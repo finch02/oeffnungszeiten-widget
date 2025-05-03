@@ -14,52 +14,42 @@
       overflow-x: hidden;
     }
 
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem 1rem 2rem;
-    }
-
     .carousel-wrapper {
       display: flex;
       align-items: center;
       width: 100%;
-      max-width: 600px;
-      position: relative;
+      max-width: 100%;
       overflow: hidden;
+      position: relative;
     }
 
     .carousel {
       display: flex;
       overflow-x: auto;
-      overflow-y: hidden;
-      scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
-      padding: 0.5rem 0;
-      flex: 1;
-      justify-content: center;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
+      width: 100%;
     }
 
     .day {
-      flex: 0 0 20%;
-      text-align: center;
+      flex: 0 0 120px;
       scroll-snap-align: center;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      padding: 0.5rem 0;
+      box-sizing: border-box;
+      text-align: center;
     }
 
     .circle {
       width: 72px;
       height: 72px;
+      font-size: 2rem;
+      margin: 0 auto 0.4rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
-      margin: 0 auto 0.4rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .open {
@@ -73,13 +63,12 @@
     }
 
     .highlight-today .circle {
-      border: 4px solid #c59b00;
-      box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
+      border: 3px solid #c59b00;
     }
 
     .date {
-      font-weight: bold;
       font-size: 0.9rem;
+      font-weight: bold;
     }
 
     .dimmed {
@@ -96,70 +85,64 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 2rem;
-      background: rgba(255, 255, 255, 0.9);
-      border-radius: 50%;
-      padding: 0.3em 0.5em;
+      font-size: 1.5rem;
+      color: #888;
+      background: none;
+      border: none;
       cursor: pointer;
-      user-select: none;
       z-index: 2;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      pointer-events: none;
+      padding: 0;
+      line-height: 1;
+      user-select: none;
+      transition: color 0.2s ease;
     }
 
-    .arrow-visible {
-      opacity: 1;
-      pointer-events: auto;
+    .arrow:hover {
+      color: #000;
     }
 
     .arrow-left {
-      left: -20px;
+      left: 0.5rem;
     }
 
     .arrow-right {
-      right: -20px;
+      right: 0.5rem;
     }
 
     @media (max-width: 480px) {
+      .day {
+        flex: 0 0 calc((100vw - 4px) / 5);
+        padding: 0;
+      }
+
       .circle {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
+        width: 48px;
+        height: 48px;
+        font-size: 1.1rem;
+        margin-bottom: 0.2rem;
+      }
+
+      .date {
+        font-size: 0.7rem;
       }
 
       .icon {
-        width: 24px;
-        height: 24px;
-      }
-
-      .day {
-        flex: 0 0 20%;
-      }
-
-      .arrow-left {
-        left: -10px;
-      }
-
-      .arrow-right {
-        right: -10px;
+        width: 20px;
+        height: 20px;
       }
     }
   </style>
 </head>
 <body>
-
   <div class="carousel-wrapper">
-    <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
+    <button class="arrow arrow-left" onclick="carousel.scrollBy({ left: -120, behavior: 'smooth' })">&#8249;</button>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow arrow-right" id="rightArrow">&#8250;</div>
+    <button class="arrow arrow-right" onclick="carousel.scrollBy({ left: 120, behavior: 'smooth' })">&#8250;</button>
   </div>
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
     const carousel = document.getElementById('carousel');
-    const leftArrow = document.getElementById('leftArrow');
-    const rightArrow = document.getElementById('rightArrow');
 
     function normalizeDate(str) {
       const [day, month, year] = str.split(".").map(Number);
@@ -190,126 +173,64 @@
       return svg;
     }
 
-    function updateArrowVisibility() {
-      const scrollLeft = carousel.scrollLeft;
-      const scrollWidth = carousel.scrollWidth;
-      const clientWidth = carousel.clientWidth;
-
-      const atStart = scrollLeft <= 1;
-      const atEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
-
-      leftArrow.classList.toggle('arrow-visible', !atStart);
-      rightArrow.classList.toggle('arrow-visible', !atEnd);
-    }
-
-    function updateDimmedElements() {
-      const days = Array.from(carousel.children);
-      const wrapperRect = carousel.getBoundingClientRect();
-
-      const visible = days.filter((el) => {
-        const rect = el.getBoundingClientRect();
-        return rect.right > wrapperRect.left + 8 && rect.left < wrapperRect.right - 8;
-      });
-
-      days.forEach((el) => el.classList.remove("dimmed"));
-
-      if (visible.length >= 3) {
-        visible[0].classList.add("dimmed");
-        visible[visible.length - 1].classList.add("dimmed");
-      }
-    }
-
     fetch(sheetURL)
-      .then((response) => response.text())
-      .then((text) => {
+      .then(res => res.text())
+      .then(text => {
         const lines = text.trim().split('\n').slice(1);
         const entries = lines.map(line => {
           const [datum, status] = line.split('\t');
-          if (!datum || !status) return null;
           const dateObj = normalizeDate(datum.trim());
-          return {
-            datum: datum.trim(),
-            status: status.trim().toLowerCase(),
-            dateObj
-          };
-        }).filter(e => e && !isNaN(e.dateObj.getTime()));
+          return { dateObj, status: status.trim().toLowerCase() };
+        }).filter(e => !isNaN(e.dateObj.getTime()));
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 2);
-        const endDate = new Date(today);
-        endDate.setDate(endDate.getDate() + 14);
+        const start = new Date(today);
+        start.setDate(today.getDate() - 2);
 
-        const fullRange = entries
-          .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
-          .sort((a, b) => a.dateObj - b.dateObj);
+        const end = new Date(today);
+        end.setDate(today.getDate() + 14);
 
-        const todayIndex = fullRange.findIndex(e =>
-          e.dateObj.toDateString() === today.toDateString()
-        );
+        const relevant = entries.filter(e => e.dateObj >= start && e.dateObj <= end);
 
-        fullRange.forEach((e) => {
-          const div = document.createElement('div');
-          div.className = 'day';
+        relevant.forEach((e, i) => {
+          const dayEl = document.createElement('div');
+          dayEl.className = 'day';
+          if (i === 0 || i === relevant.length - 1) dayEl.classList.add('dimmed');
 
           const circle = document.createElement('div');
-          const isOpen = e.status === 'geöffnet';
-          circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
+          circle.className = 'circle ' + (e.status === 'geöffnet' ? 'open' : 'closed');
 
-          if (isOpen) {
+          if (e.status === 'geöffnet') {
             circle.appendChild(createCheckmarkSVG());
           } else {
             circle.textContent = '✕';
           }
 
-          const dateText = document.createElement('div');
-          dateText.className = 'date';
-          dateText.textContent = formatDate(e.dateObj);
-
-          div.appendChild(circle);
-          div.appendChild(dateText);
+          const date = document.createElement('div');
+          date.className = 'date';
+          date.textContent = formatDate(e.dateObj);
 
           if (e.dateObj.toDateString() === today.toDateString()) {
-            div.classList.add('highlight-today');
+            dayEl.classList.add('highlight-today');
           }
 
-          carousel.appendChild(div);
+          dayEl.appendChild(circle);
+          dayEl.appendChild(date);
+          carousel.appendChild(dayEl);
         });
 
-        setTimeout(() => {
-          const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
-          const targetEl = carousel.children[centerIndex];
-          const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
-          carousel.scrollTo({ left: offset, behavior: 'smooth' });
+        const index = relevant.findIndex(e => e.dateObj.toDateString() === today.toDateString());
+        const target = carousel.children[index >= 2 ? index : 2];
 
-          updateArrowVisibility();
-          setTimeout(updateDimmedElements, 300);
-        }, 100);
+        if (target) {
+          setTimeout(() => {
+            const offset = target.offsetLeft - carousel.offsetWidth / 2 + target.offsetWidth / 2;
+            carousel.scrollTo({ left: offset, behavior: 'smooth' });
+          }, 100);
+        }
       });
-
-    carousel.addEventListener('scroll', () => {
-      updateArrowVisibility();
-      updateDimmedElements();
-    });
-
-    leftArrow.addEventListener('click', () => {
-      carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
-    });
-
-    rightArrow.addEventListener('click', () => {
-      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
-    });
-
-    window.addEventListener('load', () => {
-      updateArrowVisibility();
-      updateDimmedElements();
-    });
   </script>
-
 </body>
 </html>
-
-
-
