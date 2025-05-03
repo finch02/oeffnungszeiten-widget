@@ -112,7 +112,7 @@
     .arrow-left  { left: 8px; }
     .arrow-right { right: 8px; }
 
-    /* Mobile-Optimierung: exakte 5 Icons, geringer Abstand */
+    /* Mobile-Optimierung: etwas mehr Abstand zwischen Icons */
     @media (max-width: 480px) {
       body { padding: 0; }
       .carousel-wrapper {
@@ -120,18 +120,18 @@
         width: 100vw;
       }
       .carousel {
-        padding: 0;
-        gap: 0;
+        padding: 0.25rem 0;
+        gap: 0.6rem; /* Erhöhter Abstand */
       }
-      .day { flex: 0 0 20vw; }
+      .day { flex: 0 0 18vw; /* Etwas schmaler für Luft */ }
       .circle {
         width: 100%;
         aspect-ratio: 1/1;
         font-size: calc(1rem + 1vw);
-        margin-bottom: 0.15rem;
+        margin-bottom: 0.25rem; /* Mehr Abstand */
       }
-      .icon { width: 35%; height: 35%; }
-      .date { font-size: 0.7rem; margin-bottom: 0.1rem; }
+      .icon { width: 40%; height: 40%; }
+      .date { font-size: 0.75rem; margin-bottom: 0.15rem; }
     }
   </style>
 </head>
@@ -186,7 +186,11 @@
         const r = el.getBoundingClientRect();
         return r.right > rect.left + 8 && r.left < rect.right - 8;
       });
-      days.forEach(el => el.classList.remove('dimmed')); if(visible.length>=3){visible[0].classList.add('dimmed');visible[visible.length-1].classList.add('dimmed');}
+      days.forEach(el => el.classList.remove('dimmed'));
+      if (visible.length >= 3) {
+        visible[0].classList.add('dimmed');
+        visible[visible.length - 1].classList.add('dimmed');
+      }
     }
 
     fetch(sheetURL)
@@ -203,7 +207,15 @@
         const range = entries.filter(e=>e.dateObj>=start&&e.dateObj<=end).sort((a,b)=>a.dateObj-b.dateObj);
         const idx = range.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
 
-        range.forEach(e => {const dayEl=document.createElement('div');dayEl.className='day';const circ=document.createElement('div');circ.className='circle '+(e.open?'open':'closed');if(e.open) circ.appendChild(createCheckmarkSVG());else circ.textContent='✕';const dt=document.createElement('div');dt.className='date';dt.textContent=formatDate(e.dateObj);dayEl.append(circ,dt);if(e.dateObj.toDateString()===today.toDateString()) dayEl.classList.add('highlight-today');carousel.appendChild(dayEl);});
+        range.forEach(e => {
+          const dayEl = document.createElement('div'); dayEl.className = 'day';
+          const circ  = document.createElement('div'); circ.className='circle '+(e.open?'open':'closed');
+          if(e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent='✕';
+          const dt = document.createElement('div'); dt.className='date'; dt.textContent=formatDate(e.dateObj);
+          dayEl.append(circ,dt);
+          if(e.dateObj.toDateString()===today.toDateString()) dayEl.classList.add('highlight-today');
+          carousel.appendChild(dayEl);
+        });
 
         setTimeout(() => {
           const centerIndex = Math.max(2, Math.min(idx, carousel.children.length-3));
