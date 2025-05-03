@@ -38,7 +38,7 @@
     }
 
     .day {
-      flex: 0 0 20%; /* Genau 5 sichtbare Elemente */
+      flex: 0 0 20%;
       text-align: center;
       scroll-snap-align: center;
     }
@@ -70,14 +70,11 @@
       font-size: 0.9rem;
     }
 
-    .today {
-      font-weight: 700;
-    }
-
-    .today::after {
-      content: ' (heute)';
+    .today-label {
       font-weight: 400;
       font-size: 0.8rem;
+      margin-top: 0.2rem;
+      color: #555;
     }
 
     .dimmed {
@@ -88,6 +85,28 @@
     .icon {
       width: 28px;
       height: 28px;
+    }
+
+    .arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      background: rgba(255,255,255,0.8);
+      border-radius: 50%;
+      padding: 0.2em 0.4em;
+      cursor: pointer;
+      user-select: none;
+      z-index: 2;
+    }
+
+    .arrow-left {
+      left: -10px;
+      display: none;
+    }
+
+    .arrow-right {
+      right: -10px;
     }
 
     @media (max-width: 480px) {
@@ -111,12 +130,16 @@
 <body>
 
   <div class="carousel-wrapper">
+    <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
+    <div class="arrow arrow-right" id="rightArrow">&#8250;</div>
   </div>
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
     const carousel = document.getElementById('carousel');
+    const leftArrow = document.getElementById('leftArrow');
+    const rightArrow = document.getElementById('rightArrow');
 
     function normalizeDate(str) {
       const [day, month, year] = str.split(".").map(Number);
@@ -198,16 +221,20 @@
           dateText.className = 'date';
           dateText.textContent = formatted;
 
-          if (e.dateObj.toDateString() === today.toDateString()) {
-            dateText.classList.add('today');
-          }
-
           div.appendChild(circle);
           div.appendChild(dateText);
+
+          if (e.dateObj.toDateString() === today.toDateString()) {
+            const label = document.createElement('div');
+            label.className = 'today-label';
+            label.textContent = '(heute)';
+            div.appendChild(label);
+          }
+
           carousel.appendChild(div);
         });
 
-        // Heute mittig anzeigen – bei 5 sichtbaren Tagen ist heute Index 2 von 5
+        // Heute mittig anzeigen
         setTimeout(() => {
           const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
           const targetEl = carousel.children[centerIndex];
@@ -215,6 +242,23 @@
           carousel.scrollTo({ left: offset, behavior: 'smooth' });
         }, 100);
       });
+
+    // Scroll-Logik mit Pfeilen
+    rightArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
+
+    leftArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
+    });
+
+    carousel.addEventListener('scroll', () => {
+      if (carousel.scrollLeft > 10) {
+        leftArrow.style.display = 'block';
+      } else {
+        leftArrow.style.display = 'none';
+      }
+    });
   </script>
 
 </body>
