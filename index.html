@@ -100,8 +100,8 @@
     }
 
     .today-glow .circle {
-      outline: 3px solid #007aff;
-      box-shadow: 0 0 8px #007aff80;
+      outline: 3px solid #c49b08;
+      box-shadow: 0 0 8px #c49b08aa;
     }
 
     .dimmed {
@@ -221,6 +221,25 @@
       rightArrow.classList.toggle('arrow-visible', !atEnd);
     }
 
+    function observeVisibleDays() {
+      const observer = new IntersectionObserver((entries) => {
+        const visible = entries.filter(e => e.isIntersecting).map(e => e.target);
+
+        // Reset all
+        document.querySelectorAll('.day').forEach(el => el.classList.remove('dimmed'));
+
+        if (visible.length >= 5) {
+          visible[0]?.classList.add('dimmed');
+          visible[visible.length - 1]?.classList.add('dimmed');
+        }
+      }, {
+        root: carousel,
+        threshold: 0.6,
+      });
+
+      document.querySelectorAll('.day').forEach(day => observer.observe(day));
+    }
+
     fetch(sheetURL)
       .then((response) => response.text())
       .then((text) => {
@@ -285,49 +304,26 @@
           carousel.appendChild(div);
         });
 
-        // Heute mittig anzeigen
         setTimeout(() => {
           const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
           const targetEl = carousel.children[centerIndex];
           const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
           carousel.scrollTo({ left: offset, behavior: 'smooth' });
           updateArrowVisibility();
+          observeVisibleDays();
         }, 100);
-
-        observeVisibleDays();
       });
-
-    // Scroll-Pfeile
-    rightArrow.addEventListener('click', () => {
-      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
-    });
 
     leftArrow.addEventListener('click', () => {
       carousel.scrollBy({ left: -carousel.offsetWidth / 2, behavior: 'smooth' });
     });
 
-    carousel.addEventListener('scroll', () => {
-      updateArrowVisibility();
+    rightArrow.addEventListener('click', () => {
+      carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
     });
 
+    carousel.addEventListener('scroll', updateArrowVisibility);
     window.addEventListener('load', updateArrowVisibility);
-
-    // Dynamisch dimme linke/rechte sichtbare Tage
-    function observeVisibleDays() {
-      const observer = new IntersectionObserver((entries) => {
-        const visible = entries.filter(e => e.isIntersecting).map(e => e.target);
-        document.querySelectorAll('.day').forEach(el => el.classList.remove('dimmed'));
-        if (visible.length >= 5) {
-          visible[0].classList.add('dimmed');
-          visible[visible.length - 1].classList.add('dimmed');
-        }
-      }, {
-        root: carousel,
-        threshold: 0.6,
-      });
-
-      document.querySelectorAll('.day').forEach(day => observer.observe(day));
-    }
   </script>
 
 </body>
