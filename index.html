@@ -99,8 +99,8 @@
     }
 
     .dimmed {
-      opacity: 0.4 !important;
-      transform: scale(0.9) translateY(4px);
+      opacity: 0.3 !important;
+      transform: scale(0.85) translateY(6px);
       z-index: 0;
     }
 
@@ -209,7 +209,7 @@
       const scrollWidth = carousel.scrollWidth;
       const clientWidth = carousel.clientWidth;
 
-      const atStart = scrollLeft <= 1;
+      const atStart = scrollLeft <= 10;
       const atEnd = Math.ceil(scrollLeft + clientWidth) >= scrollWidth;
 
       leftArrow.classList.toggle('arrow-visible', !atStart);
