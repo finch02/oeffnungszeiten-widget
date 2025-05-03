@@ -91,6 +91,7 @@
     .date {
       font-weight: bold;
       font-size: 0.9rem;
+      white-space: nowrap;
     }
 
     .today-glow .circle {
@@ -158,6 +159,10 @@
       .carousel-wrapper::after {
         width: 24px;
       }
+
+      .date {
+        font-size: 0.75rem;
+      }
     }
   </style>
 </head>
@@ -216,22 +221,20 @@
       rightArrow.classList.toggle('arrow-visible', !atEnd);
     }
 
-    function observeVisibleDays() {
-      const observer = new IntersectionObserver((entries) => {
-        const visible = entries.filter(e => e.isIntersecting).map(e => e.target);
-
-        document.querySelectorAll('.day').forEach(el => el.classList.remove('dimmed'));
-
-        if (visible.length >= 5) {
-          visible[0]?.classList.add('dimmed');
-          visible[visible.length - 1]?.classList.add('dimmed');
-        }
-      }, {
-        root: carousel,
-        threshold: 0.6,
+    function updateDimmedEffect() {
+      const items = Array.from(document.querySelectorAll('.day'));
+      const rect = carousel.getBoundingClientRect();
+      const visibleItems = items.filter(item => {
+        const itemRect = item.getBoundingClientRect();
+        return itemRect.left >= rect.left && itemRect.right <= rect.right;
       });
 
-      document.querySelectorAll('.day').forEach(day => observer.observe(day));
+      items.forEach(el => el.classList.remove('dimmed'));
+
+      if (visibleItems.length >= 5) {
+        visibleItems[0]?.classList.add('dimmed');
+        visibleItems[visibleItems.length - 1]?.classList.add('dimmed');
+      }
     }
 
     fetch(sheetURL)
@@ -242,28 +245,18 @@
           const [datum, status] = line.split('\t');
           if (!datum || !status) return null;
           const dateObj = normalizeDate(datum.trim());
-          return {
-            datum: datum.trim(),
-            status: status.trim().toLowerCase(),
-            dateObj
-          };
+          return { datum: datum.trim(), status: status.trim().toLowerCase(), dateObj };
         }).filter(e => e && !isNaN(e.dateObj.getTime()));
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        const startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 2);
-        const endDate = new Date(today);
-        endDate.setDate(endDate.getDate() + 14);
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        const startDate = new Date(today); startDate.setDate(startDate.getDate() - 2);
+        const endDate = new Date(today); endDate.setDate(endDate.getDate() + 14);
 
         const fullRange = entries
           .filter(e => e.dateObj >= startDate && e.dateObj <= endDate)
           .sort((a, b) => a.dateObj - b.dateObj);
 
-        const todayIndex = fullRange.findIndex(e =>
-          e.dateObj.toDateString() === today.toDateString()
-        );
+        const todayIndex = fullRange.findIndex(e => e.dateObj.toDateString() === today.toDateString());
 
         fullRange.forEach((e, i) => {
           const div = document.createElement('div');
@@ -293,14 +286,21 @@
           carousel.appendChild(div);
         });
 
-        setTimeout(() => {
+        // ✅ Finaler Scroll-Fix mit requestAnimationFrame
+        function scrollToToday() {
           const centerIndex = Math.max(2, Math.min(todayIndex, carousel.children.length - 3));
           const targetEl = carousel.children[centerIndex];
           const offset = targetEl.offsetLeft - carousel.offsetWidth / 2 + targetEl.offsetWidth / 2;
           carousel.scrollTo({ left: offset, behavior: 'smooth' });
           updateArrowVisibility();
-          observeVisibleDays();
-        }, 100);
+          updateDimmedEffect();
+        }
+
+        window.addEventListener('load', () => {
+          requestAnimationFrame(() => {
+            scrollToToday();
+          });
+        });
       });
 
     leftArrow.addEventListener('click', () => {
@@ -311,8 +311,10 @@
       carousel.scrollBy({ left: carousel.offsetWidth / 2, behavior: 'smooth' });
     });
 
-    carousel.addEventListener('scroll', updateArrowVisibility);
-    window.addEventListener('load', updateArrowVisibility);
+    carousel.addEventListener('scroll', () => {
+      updateArrowVisibility();
+      updateDimmedEffect();
+    });
   </script>
 
 </body>
