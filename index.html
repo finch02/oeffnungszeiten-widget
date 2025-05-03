@@ -16,6 +16,8 @@
       background: #fff;
       color: #000;
       overflow-x: hidden;
+      /* Verhindert Scroll-Ketten auf Mobilgeräten */
+      overscroll-behavior-y: none;
     }
     body {
       display: flex;
@@ -24,26 +26,35 @@
       padding: 1rem;
     }
 
-    /* Carousel-Container */
+    /* Carousel-Container fixieren und Overscroll unterbinden */
     .carousel-wrapper {
-      position: relative;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #fff;
       width: 100%;
       max-width: 600px;
       overflow: hidden;
       margin-bottom: 2rem;
+      /* Verhindert, dass der Carousel-Bereich beim Ziehen nach oben wandert */
+      overscroll-behavior: contain;
     }
     .carousel {
       display: flex;
       overflow-x: auto;
+      overflow-y: hidden;
       scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
       -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
       gap: 0.4rem;
       justify-content: flex-start;
+      /* ausschließlich horizontales Panning zulassen */
+      touch-action: pan-x;
+      overscroll-behavior: contain;
     }
 
-    /* Fünf Items pro Sicht (Desktop & Tablet) */
+    /* Fünf Items pro Sicht (Desktop & Tablet & Mobil) */
     .day {
       flex: 0 0 20%;
       scroll-snap-align: center;
@@ -101,7 +112,7 @@
     .arrow-left  { left: 8px; }
     .arrow-right { right: 8px; }
 
-    /* Mobile-Optimierung: 5 Icons exakt, ohne Scroll-Padding */
+    /* Mobile-Optimierung: exakte 5 Icons, geringer Abstand */
     @media (max-width: 480px) {
       body { padding: 0; }
       .carousel-wrapper {
@@ -112,24 +123,15 @@
         padding: 0;
         gap: 0;
       }
-      .day {
-        /* Jeder Slot ist 20vw breit */
-        flex: 0 0 20vw;
-      }
+      .day { flex: 0 0 20vw; }
       .circle {
         width: 100%;
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 1/1;
         font-size: calc(1rem + 1vw);
         margin-bottom: 0.15rem;
       }
-      .icon {
-        width: 35%;
-        height: 35%;
-      }
-      .date {
-        font-size: 0.7rem;
-        margin-bottom: 0.1rem;
-      }
+      .icon { width: 35%; height: 35%; }
+      .date { font-size: 0.7rem; margin-bottom: 0.1rem; }
     }
   </style>
 </head>
@@ -184,11 +186,7 @@
         const r = el.getBoundingClientRect();
         return r.right > rect.left + 8 && r.left < rect.right - 8;
       });
-      days.forEach(el => el.classList.remove('dimmed'));
-      if (visible.length >= 3) {
-        visible[0].classList.add('dimmed');
-        visible[visible.length - 1].classList.add('dimmed');
-      }
+      days.forEach(el => el.classList.remove('dimmed')); if(visible.length>=3){visible[0].classList.add('dimmed');visible[visible.length-1].classList.add('dimmed');}
     }
 
     fetch(sheetURL)
@@ -196,43 +194,29 @@
       .then(text => {
         const rows = text.trim().split('\n').slice(1);
         const entries = rows.map(line => {
-          const [date, stat] = line.split('\t'); if (!date||!stat) return null;
-          const d = normalizeDate(date.trim());
-          return { dateObj: d, open: stat.trim().toLowerCase() === 'geöffnet' };
+          const [date, stat] = line.split('\t'); if (!date || !stat) return null; const d = normalizeDate(date.trim()); return { dateObj: d, open: stat.trim().toLowerCase() === 'geöffnet' };
         }).filter(e => e && !isNaN(e.dateObj));
 
         const today = new Date(); today.setHours(0,0,0,0);
         const start = new Date(today); start.setDate(start.getDate()-2);
         const end   = new Date(today); end.setDate(end.getDate()+14);
-        const range = entries
-          .filter(e => e.dateObj >= start && e.dateObj <= end)
-          .sort((a,b)=>a.dateObj - b.dateObj);
+        const range = entries.filter(e=>e.dateObj>=start&&e.dateObj<=end).sort((a,b)=>a.dateObj-b.dateObj);
         const idx = range.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
 
-        range.forEach(e => {
-          const dayEl = document.createElement('div'); dayEl.className = 'day';
-          const circ  = document.createElement('div');
-          circ.className = 'circle ' + (e.open?'open':'closed');
-          if (e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent = '✕';
-          const dt = document.createElement('div'); dt.className='date'; dt.textContent=formatDate(e.dateObj);
-          dayEl.append(circ, dt);
-          if (e.dateObj.toDateString()===today.toDateString()) dayEl.classList.add('highlight-today');
-          carousel.appendChild(dayEl);
-        });
+        range.forEach(e => {const dayEl=document.createElement('div');dayEl.className='day';const circ=document.createElement('div');circ.className='circle '+(e.open?'open':'closed');if(e.open) circ.appendChild(createCheckmarkSVG());else circ.textContent='✕';const dt=document.createElement('div');dt.className='date';dt.textContent=formatDate(e.dateObj);dayEl.append(circ,dt);if(e.dateObj.toDateString()===today.toDateString()) dayEl.classList.add('highlight-today');carousel.appendChild(dayEl);});
 
         setTimeout(() => {
           const centerIndex = Math.max(2, Math.min(idx, carousel.children.length-3));
           const el = carousel.children[centerIndex];
           const offset = el.offsetLeft - carousel.offsetWidth/2 + el.offsetWidth/2;
-          carousel.scrollTo({left:offset,behavior:'smooth'});
-          updateArrowVisibility();
-          setTimeout(updateDimmed,300);
+          carousel.scrollTo({ left: offset, behavior: 'smooth' });
+          updateArrowVisibility(); setTimeout(updateDimmed,300);
         },100);
       });
 
-    carousel.addEventListener('scroll', ()=>{updateArrowVisibility();updateDimmed();});
-    leftArrow.addEventListener('click', ()=>carousel.scrollBy({left:-carousel.offsetWidth/2,behavior:'smooth'}));
-    rightArrow.addEventListener('click', ()=>carousel.scrollBy({left:carousel.offsetWidth/2,behavior:'smooth'}));
+    carousel.addEventListener('scroll', () => { updateArrowVisibility(); updateDimmed(); });
+    leftArrow.addEventListener('click', () => carousel.scrollBy({ left: -carousel.offsetWidth/2, behavior: 'smooth' }));
+    rightArrow.addEventListener('click', () => carousel.scrollBy({ left: carousel.offsetWidth/2, behavior: 'smooth' }));
   </script>
 </body>
 </html>
