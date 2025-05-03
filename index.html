@@ -2,8 +2,8 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Öffnungszeiten-Ampel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>\u00d6ffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
     html, body {
@@ -121,22 +121,20 @@
       right: -20px;
     }
 
-    /* Smartphones */
     @media (max-width: 480px) {
       .day {
-        width: 20%;
         flex: 0 0 20%;
       }
 
       .circle {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
+        width: 52px;
+        height: 52px;
+        font-size: 1.2rem;
       }
 
       .icon {
-        width: 24px;
-        height: 24px;
+        width: 22px;
+        height: 22px;
       }
 
       .date {
@@ -151,45 +149,13 @@
         right: -10px;
       }
     }
-
-    /* Tablets und kleine Laptops */
-    @media (min-width: 481px) and (max-width: 1024px) {
-      .day {
-        width: 18%;
-        flex: 0 0 18%;
-      }
-
-      .circle {
-        width: 68px;
-        height: 68px;
-        font-size: 1.8rem;
-      }
-
-      .icon {
-        width: 26px;
-        height: 26px;
-      }
-
-      .date {
-        font-size: 0.85rem;
-      }
-
-      .arrow-left {
-        left: -15px;
-      }
-
-      .arrow-right {
-        right: -15px;
-      }
-    }
   </style>
 </head>
 <body>
-
   <div class="carousel-wrapper">
-    <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
+    <div class="arrow arrow-left" id="leftArrow">\u2039</div>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow arrow-right" id="rightArrow">&#8250;</div>
+    <div class="arrow arrow-right" id="rightArrow">\u203a</div>
   </div>
 
   <script>
@@ -292,13 +258,13 @@
           div.className = 'day';
 
           const circle = document.createElement('div');
-          const isOpen = e.status === 'geöffnet';
+          const isOpen = e.status === 'ge\u00f6ffnet';
           circle.className = 'circle ' + (isOpen ? 'open' : 'closed');
 
           if (isOpen) {
             circle.appendChild(createCheckmarkSVG());
           } else {
-            circle.textContent = '✕';
+            circle.textContent = '\u2715';
           }
 
           const dateText = document.createElement('div');
@@ -344,6 +310,5 @@
       updateDimmedElements();
     });
   </script>
-
 </body>
 </html>
