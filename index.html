@@ -6,54 +6,51 @@
   <title>Öffnungszeiten-Ampel</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    /* --- Reset & Body scroll wieder erlauben --- */
+    /* Kein vertikales Scrollen mehr, Body genau viewport-high */
     html, body {
       margin: 0;
       padding: 0;
+      width: 100%;
+      height: 100vh;           /* genau eine Viewport-Höhe */
+      overflow: hidden;        /* kein Scroll in jede Richtung */
       font-family: 'Inter', sans-serif;
       background: #fff;
       color: #000;
-      /* Seite scrollt normal vertikal */
-      overflow-x: hidden;
-      overflow-y: auto;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 1rem 1rem 2rem;
     }
 
-    /* --- Widget: block vertikales Panning, nur horizontal --- */
+    /* Widget bleibt in der Mitte, keine vertikale Bewegung */
     .carousel-wrapper {
       position: relative;
       width: 100%;
       max-width: 600px;
+      height: 100%;            /* füllt die gesamte Höhe */
       overflow: hidden;
-      margin-bottom: 2rem;
-      /* verhindert Overscroll im Widget nach oben/unten */
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: pan-x;     /* nur horizontal pannen */
       overscroll-behavior: contain;
-      /* nur horizontales Wischen erlauben */
-      touch-action: pan-x;
     }
 
     .carousel {
       display: flex;
+      width: 100%;
       overflow-x: auto;
-      overflow-y: hidden; /* kein vertikaler Scroll im Carousel */
-      scroll-behavior: smooth;
+      overflow-y: hidden;
       scroll-snap-type: x mandatory;
+      scroll-behavior: smooth;
       -webkit-overflow-scrolling: touch;
-      padding: 0.5rem 0;
-      flex: 1;
-      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem 0;
+      touch-action: pan-x;
     }
 
     .day {
-      flex: 0 0 20%; /* 5 Slots nebeneinander */
-      text-align: center;
+      flex: 0 0 20%;           /* 5 Elemente nebeneinander */
       scroll-snap-align: center;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      text-align: center;
+      transition: transform .3s, opacity .3s;
     }
 
     .circle {
@@ -64,28 +61,27 @@
       align-items: center;
       justify-content: center;
       font-size: 2rem;
-      margin: 0 auto 0.4rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.3s ease;
+      margin: 0 auto .4rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: box-shadow .3s;
     }
-
-    .open  { background-color: #f4c721; color: #fff; }
-    .closed{ background-color: #000;    color: #fff; }
+    .open   { background: #f4c721; color: #fff; }
+    .closed { background: #000;    color: #fff; }
 
     .highlight-today .circle {
       border: 4px solid #c59b00;
-      box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
+      box-shadow: inset 0 0 4px rgba(0,0,0,0.2);
     }
 
     .date {
       font-family: 'Inter', sans-serif !important;
+      font-size: .9rem;
       font-weight: bold;
-      font-size: 0.9rem;
     }
 
     .dimmed {
-      opacity: 0.35;
-      transform: scale(0.92);
+      opacity: .35;
+      transform: scale(.92);
     }
 
     .icon {
@@ -98,46 +94,29 @@
       top: 50%;
       transform: translateY(-50%);
       font-size: 2rem;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255,255,255,0.9);
       border-radius: 50%;
-      padding: 0.3em 0.5em;
+      padding: .3em .5em;
       cursor: pointer;
       user-select: none;
-      z-index: 2;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity .3s;
       pointer-events: none;
+      z-index: 2;
     }
+    .arrow-visible { opacity: 1; pointer-events: auto; }
+    .arrow-left  { left: 0; }
+    .arrow-right { right: 0; }
 
-    .arrow-visible {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .arrow-left  { left: -20px; }
-    .arrow-right { right: -20px; }
-
-    /* Mobile Anpassung */
+    /* Mobile tweak */
     @media (max-width: 480px) {
-      .circle {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-      }
-      .icon {
-        width: 24px;
-        height: 24px;
-      }
-      .day {
-        flex: 0 0 20%;  /* 5 Slots, mobile gleich 20% */
-      }
-      .arrow-left  { left: -10px; }
-      .arrow-right { right: -10px; }
+      .circle { width: 60px; height: 60px; font-size: 1.5rem; }
+      .icon   { width: 24px; height: 24px; }
+      .day    { flex: 0 0 20vw; } /* 5 Slots auf 100vw */
     }
   </style>
 </head>
 <body>
-
   <div class="carousel-wrapper">
     <div class="arrow arrow-left"  id="leftArrow">&#8249;</div>
     <div class="carousel"         id="carousel"></div>
@@ -145,21 +124,19 @@
   </div>
 
   <script>
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSgQY7ezPfmYcG9q1RJM9d-uM5zfUOZ8TQ55wVCwgAt2FYGrkAo902VloWCcpgSCYnw_Al1acpppdWv/pub?output=tsv';
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/…/pub?output=tsv';
     const carousel   = document.getElementById('carousel');
     const leftArrow  = document.getElementById('leftArrow');
     const rightArrow = document.getElementById('rightArrow');
 
     function normalizeDate(str) {
       const [d,m,y] = str.split('.').map(Number);
-      return new Date(y < 100 ? 2000+y : y, m-1, d);
+      return new Date(y<100?2000+y:y, m-1, d);
     }
-    function formatDate(dt) {
-      return dt.toLocaleDateString('de-DE', {
-        day: '2-digit', month: '2-digit', year: '2-digit'
-      });
+    function formatDate(d) {
+      return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'2-digit'});
     }
-    function createCheckmarkSVG() {
+    function createCheckmarkSVG(){
       const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
       svg.setAttribute('viewBox','0 0 24 24');
       svg.setAttribute('fill','none');
@@ -173,76 +150,62 @@
       svg.appendChild(path);
       return svg;
     }
-    function updateArrows() {
-      const sc  = carousel.scrollLeft;
-      const max = carousel.scrollWidth - carousel.clientWidth;
-      leftArrow.classList.toggle('arrow-visible',  sc > 1);
-      rightArrow.classList.toggle('arrow-visible', sc < max - 1);
+    function updateArrows(){
+      const sc=carousel.scrollLeft, max=carousel.scrollWidth-carousel.clientWidth;
+      leftArrow.classList.toggle('arrow-visible',  sc>1);
+      rightArrow.classList.toggle('arrow-visible', sc<max-1);
     }
-    function updateDimmed() {
-      const days = Array.from(carousel.children);
-      const rect = carousel.getBoundingClientRect();
-      const vis  = days.filter(el => {
-        const r = el.getBoundingClientRect();
-        return r.right > rect.left+8 && r.left < rect.right-8;
+    function updateDimmed(){
+      const days=[...carousel.children], r=carousel.getBoundingClientRect();
+      const vis = days.filter(el=>{
+        const b=el.getBoundingClientRect();
+        return b.right>r.left+8&&b.left<r.right-8;
       });
-      days.forEach(el => el.classList.remove('dimmed'));
-      if (vis.length >= 3) {
+      days.forEach(el=>el.classList.remove('dimmed'));
+      if(vis.length>=3){
         vis[0].classList.add('dimmed');
         vis[vis.length-1].classList.add('dimmed');
       }
     }
 
-    fetch(sheetURL)
-      .then(r => r.text())
-      .then(text => {
-        const lines = text.trim().split('\n').slice(1);
-        const entries = lines.map(line => {
-          const [datum,status] = line.split('\t');
-          if (!datum||!status) return null;
-          return { dateObj: normalizeDate(datum.trim()), open: status.trim().toLowerCase() === 'geöffnet' };
-        }).filter(e => e && !isNaN(e.dateObj));
+    fetch(sheetURL).then(r=>r.text()).then(txt=>{
+      const lines=txt.trim().split('\n').slice(1);
+      const entries=lines.map(l=>{
+        const [dt,st]=l.split('\t');
+        if(!dt||!st)return null;
+        return { dateObj:normalizeDate(dt.trim()), open:st.trim().toLowerCase()==='geöffnet' };
+      }).filter(e=>e&&e.dateObj);
 
-        const today = new Date(); today.setHours(0,0,0,0);
-        const start = new Date(today); start.setDate(start.getDate()-2);
-        const end   = new Date(today); end.setDate(end.getDate()+14);
+      const today=new Date(); today.setHours(0,0,0,0);
+      const start=new Date(today); start.setDate(start.getDate()-2);
+      const end=new Date(today);   end.setDate(end.getDate()+14);
+      const range=entries.filter(e=>e.dateObj>=start&&e.dateObj<=end)
+                         .sort((a,b)=>a.dateObj-b.dateObj);
+      const idx=range.findIndex(e=>e.dateObj.toDateString()===today.toDateString());
 
-        const range = entries
-          .filter(e => e.dateObj >= start && e.dateObj <= end)
-          .sort((a,b) => a.dateObj - b.dateObj);
-        const idx = range.findIndex(e => e.dateObj.toDateString() === today.toDateString());
-
-        range.forEach(e => {
-          const day = document.createElement('div'); day.className = 'day';
-          const circ = document.createElement('div'); circ.className = 'circle ' + (e.open?'open':'closed');
-          if (e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent = '✕';
-          const dt = document.createElement('div'); dt.className = 'date'; dt.textContent = formatDate(e.dateObj);
-          day.append(circ, dt);
-          if (e.dateObj.toDateString() === today.toDateString())
-            day.classList.add('highlight-today');
-          carousel.appendChild(day);
-        });
-
-        setTimeout(() => {
-          const c = Math.max(2, Math.min(idx, carousel.children.length-3));
-          const el = carousel.children[c];
-          const off = el.offsetLeft - carousel.clientWidth/2 + el.clientWidth/2;
-          carousel.scrollTo({ left: off, behavior: 'smooth' });
-          updateArrows();
-          updateDimmed();
-        }, 100);
-
-        carousel.addEventListener('scroll', () => {
-          updateArrows();
-          updateDimmed();
-        });
-        leftArrow.addEventListener('click', () =>
-          carousel.scrollBy({ left: -carousel.clientWidth/2, behavior: 'smooth' })
-        );
-        rightArrow.addEventListener('click', () =>
-          carousel.scrollBy({ left: carousel.clientWidth/2, behavior: 'smooth' })
-        );
+      range.forEach(e=>{
+        const dayEl=document.createElement('div'); dayEl.className='day';
+        const circ=document.createElement('div'); circ.className='circle '+(e.open?'open':'closed');
+        if(e.open) circ.appendChild(createCheckmarkSVG()); else circ.textContent='✕';
+        const dtEl=document.createElement('div'); dtEl.className='date'; dtEl.textContent=formatDate(e.dateObj);
+        dayEl.append(circ, dtEl);
+        if(e.dateObj.toDateString()===today.toDateString()) dayEl.classList.add('highlight-today');
+        carousel.appendChild(dayEl);
       });
+
+      setTimeout(()=>{
+        const c=Math.max(2, Math.min(idx, carousel.children.length-3));
+        const el=carousel.children[c];
+        const off=el.offsetLeft-carousel.clientWidth/2+el.clientWidth/2;
+        carousel.scrollTo({left:off,behavior:'smooth'});
+        carousel.scrollTo({left:off,behavior:'smooth'});
+        updateArrows(); updateDimmed();
+      },100);
+
+      carousel.addEventListener('scroll',()=>{updateArrows();updateDimmed();});
+      leftArrow.addEventListener ('click',()=>carousel.scrollBy({left:-carousel.clientWidth/2,behavior:'smooth'}));
+      rightArrow.addEventListener('click',()=>carousel.scrollBy({left: carousel.clientWidth/2,behavior:'smooth'}));
+    });
   </script>
 </body>
 </html>
