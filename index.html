@@ -33,19 +33,20 @@
     .carousel {
       display: flex;
       overflow-x: auto;
+      overflow-y: hidden;
       scroll-behavior: smooth;
       scroll-snap-type: x mandatory;
-      -webkit-overflow-scrolling: touch;
       padding: 0.5rem 0;
       flex: 1;
       justify-content: center;
+      -webkit-overflow-scrolling: touch;
     }
 
     .day {
       flex: 0 0 20%;
-      scroll-snap-align: center;
       text-align: center;
-      transition: transform 0.3s ease, opacity 0.3s ease;
+      scroll-snap-align: center;
+      transition: opacity 0.3s ease, transform 0.3s ease;
     }
 
     .circle {
@@ -58,6 +59,7 @@
       font-size: 2rem;
       margin: 0 auto 0.4rem;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
     }
 
     .open {
@@ -119,28 +121,30 @@
       right: -20px;
     }
 
+    /* Mobile optimiert */
     @media (max-width: 480px) {
       .circle {
-        width: 48px;
-        height: 48px;
-        font-size: 1.2rem;
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-bottom: 0.2rem;
       }
 
       .icon {
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
       }
 
       .date {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
       }
 
       .arrow-left {
-        left: -10px;
+        left: -8px;
       }
 
       .arrow-right {
-        right: -10px;
+        right: -8px;
       }
     }
   </style>
@@ -148,9 +152,9 @@
 <body>
 
   <div class="carousel-wrapper">
-    <div class="arrow arrow-left" id="leftArrow">‹</div>
+    <div class="arrow arrow-left" id="leftArrow">&#8249;</div>
     <div class="carousel" id="carousel"></div>
-    <div class="arrow arrow-right" id="rightArrow">›</div>
+    <div class="arrow arrow-right" id="rightArrow">&#8250;</div>
   </div>
 
   <script>
