@@ -22,7 +22,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 1rem 1rem 2rem;
+      padding: 0.5rem 1rem 2rem;
     }
 
     .carousel-wrapper {
@@ -109,6 +109,36 @@
     .arrow-left { left: 0; }
     .arrow-right { right: 0; }
 
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #333;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-icon {
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      color: #fff;
+    }
+
+    .legend-open { background-color: #f4c721; }
+    .legend-closed { background-color: #000; }
+
     @media (max-width: 480px) {
       .circle {
         width: 52px;
@@ -122,6 +152,10 @@
       .date {
         font-size: 0.75rem;
       }
+      .legend {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     }
   </style>
 </head>
@@ -131,6 +165,17 @@
     <button class="arrow arrow-left" id="leftArrow">‹</button>
     <div class="carousel" id="carousel"></div>
     <button class="arrow arrow-right" id="rightArrow">›</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-icon legend-open">✔</div>
+      <span>geöffnet</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-icon legend-closed">✕</div>
+      <span>geschlossen</span>
+    </div>
   </div>
 
   <script>
