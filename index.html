@@ -204,11 +204,11 @@
       return new Date(year < 100 ? 2000 + year : year, month - 1, day);
     }
 
+    // Angepasst: nur Tag und Monat
     function formatDate(date) {
       return date.toLocaleDateString("de-DE", {
         day: "2-digit",
-        month: "2-digit",
-        year: "2-digit",
+        month: "2-digit"
       });
     }
 
